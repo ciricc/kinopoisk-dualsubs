@@ -1,0 +1,20 @@
+[class*="Subtitles__item"] {
+  background-color: rgba(0,0,0,.78);
+  font-size: 2.8rem;
+  display: inline-block;
+  width: max-content;
+  padding: 2px 28px;
+}
+
+[class*="Subtitles__root"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.extention--alternative-cue {
+  display: block;
+  font-size: 2.2rem;
+}

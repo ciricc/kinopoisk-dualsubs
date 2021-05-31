@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "Кинопоиск HD | Субтитры 2.0",
+  "version": "0.1.0",
+  "description": "Прокачивайте субтитры в Кинопоиске",
+  "content_scripts": [{
+    "css": ["styles.css"],
+    "js": ["main.js"],
+    "matches": ["https://hd.kinopoisk.ru/*"]
+  }],
+  "permissions": [
+    "webNavigation",
+    "activeTab",
+    "tabs",
+    "cookies",
+    "<all_urls>"
+  ]
+}
