@@ -8,11 +8,5 @@
     "js": ["main.js"],
     "matches": ["https://hd.kinopoisk.ru/*"]
   }],
-  "permissions": [
-    "webNavigation",
-    "activeTab",
-    "tabs",
-    "cookies",
-    "<all_urls>"
-  ]
+  "permissions": []
 }
