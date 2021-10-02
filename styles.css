@@ -1,5 +1,5 @@
-[class*="Subtitles__item"] {
-  background-color: rgba(0,0,0,.78);
+[class*="Subtitles__text"] {
+  background-color: rgba(0, 0, 0, .78);
   font-size: 2.8rem;
   display: inline-block;
   width: max-content;
