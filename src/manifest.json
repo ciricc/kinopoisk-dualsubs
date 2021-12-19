@@ -1,0 +1,29 @@
+{
+  "name": "Двойные субтитры Кинопоиск HD",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_icon": {
+      "16": "assets/icons/16.png",
+      "48": "assets/icons/48.png",
+      "128": "assets/icons/128.png"
+    },
+    "default_title": "Popup"
+  },
+  "icons": {
+    "16": "assets/icons/16.png",
+    "48": "assets/icons/48.png",
+    "128": "assets/icons/128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://hd.kinopoisk.ru/", "*://hd.kinopoisk.ru/*"],
+      "js": ["content-scripts/main.ts"]
+    }
+  ],
+  "background": {
+    "service_worker": "./background/sw.ts",
+    "type": "module"
+  },
+  "permissions": ["tabs", "storage"]
+}
