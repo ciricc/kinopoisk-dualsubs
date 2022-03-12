@@ -110,22 +110,15 @@
     }
   }
 
-  onMount(() => {
-    if (document.location.href.match(/^http(s):\/\/hd\.kinopoisk\.ru/)) {
-      isKinopoisk = true;
-    }
-  })
-
 </script>
 <svelte:window on:resize={handleResizePlayer} on:mousemove={mouseMovehandle}></svelte:window>
 
-{#if $settings && isKinopoisk}
+{#if $settings}
   <KinopoiskDualsubs/>
 {/if}
 
 <div bind:this={appContainer} class="dark">
   {#if $settings}
-    {#if isKinopoisk}
       {#if visibleFullScreenController && !visible}
         <div>
           <div class="pr-6 py-6 screenfixed" on:click={() => show()}>
@@ -151,23 +144,7 @@
           </div>
         </div>
       {/if}
-    {:else}
-      {#if visible}
-        <div>
-          <div class="pr-4 w-156 py-6 screenfixed" on:mouseenter={() => deleteNonActiveTimeoutHide()} on:mouseleave={() => createNonActiveTimeoutHide()}>
-            <div class="{slideDown ? "translate-y-0 opacity-100" : "-translate-y-10 opacity-0 pointer-events-none"} widget dark:bg-dark-800 dark:text-gray-300 px-6 text-base pt-4">
-              <p>
-                Управление расширением доступно только на странице с видеоплеером Кинопоиск HD.
-              </p>
-              <div class="mt-4">
-                <a href="https://hd.kinopoisk.ru" target="_blank" rel="noreferrer noopener" class="button">Перейти к просмотру кино</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      {/if}
     {/if}
-  {/if}
 </div>
 
 <style>
@@ -178,10 +155,6 @@
   .widget {
     @apply transform transition-transform duration-100 bg-white min-w-96 pb-6;
     @apply rounded-xl shadow-dark-900/20 shadow-xl text-lg overflow-hidden;
-  }
-
-  .button {
-    @apply bg-orange-500 text-white font-semibold py-2 px-6 rounded-md text-base hover:opacity-70 !no-underline;
   }
 
 </style>
