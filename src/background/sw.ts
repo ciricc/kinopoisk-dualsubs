@@ -6,10 +6,14 @@ import type { Message, Settings } from '../types';
 
 browser.action.onClicked.addListener((tab) => {
   if (tab.id) {
-    browser.tabs.sendMessage(tab.id, {
-      type: "toggle_visible",
-      data: {},
-    } as Message)
+    try {
+      browser.tabs.sendMessage(tab.id, {
+        type: "toggle_visible",
+        data: {},
+      } as Message)
+    } catch (e) {
+      console.error("Can't  send message to this tab", e);
+    }
   }
 });
 

@@ -17,7 +17,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://hd.kinopoisk.ru/", "*://hd.kinopoisk.ru/*"],
+      "matches": ["*://*/*"],
       "js": ["content-scripts/main.ts"]
     }
   ],

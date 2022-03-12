@@ -59,16 +59,21 @@
   const loadContentSubtitles = async () => {
     let metadata = await getContentMetadata(contentInfo.filmId);
     let contentId = contentInfo.filmId;
-    if (metadata.contentType === "tv-sesies" && (contentInfo.season && contentInfo.episode)) {
+
+    if (metadata.contentType === "tv-series" && (contentInfo.season && contentInfo.episode)) {
       let tv = await getContentChildren(contentId);
       let episode = tv.seasons[contentInfo.season - 1].episodes[contentInfo.episode - 1];
       contentId = contentId ? episode.filmId as string : "";
     }
+    
     if (!contentId) return;
+    
     let streamsMetadata = await getContentStreamsMetadata(contentId);
+    
     let subs = streamsMetadata.streams[0].subtitles.find((sub) => {
       return sub.language === LANGAUGES.RUS && watchParams.subtitleLanguage === LANGAUGES.ENG || sub.language === LANGAUGES.ENG && watchParams.subtitleLanguage === LANGAUGES.RUS;
     });
+
     if (subs) {
       renderingSubtitles = subs;
     }
@@ -104,11 +109,14 @@
     let intervalStart = Date.now()
     checkVideoCuesInterval = setInterval(() => {
       if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME) clearInterval(checkVideoCuesInterval);
+      
       let videos = document.body.getElementsByTagName("video");
+      
       if (videos.length && videos[0].textTracks && videos[0].textTracks.length && videos[0].textTracks[0].cues && videos[0].textTracks[0].cues.length) {
         clearInterval(checkVideoCuesInterval);
         fillAltCues();
       }
+
     }, CHECK_INTERVAL_TIME);
   }
 
@@ -116,21 +124,25 @@
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
     let cues = Array.from(video.textTracks[0].cues);
+    
     cues.forEach((cue:any, i) => {
       if (!cue.text.match(altCueRegExp)) {
         originalCues[i] = String(cue.text);
       }
     })
+
     let notFilled = [];
     let fillWith = [];
 
     cues.forEach((cue, cueIndex) => {
       let alternativeCue = "";
+      
       parsedCues.forEach((el) => {
         if (Math.abs(cue.startTime - (el.startTime/1000)) <= 2) {
           alternativeCue = el.text;
         }
       });
+
       if (alternativeCue) {
         fillWith.push(alternativeCue);
         let currentCue = video.textTracks[0].cues[cueIndex] as any
@@ -159,7 +171,7 @@
   const clearCurrentCues = () => {
     renderingSubtitles=null;
     parsedCues = [];
-    originalCues=[];
+    originalCues = [];
   }
 
   const stopIntervals = () => {
@@ -186,11 +198,14 @@
       stopIntervals();
       // Return original cues when disabling
       let videos = document.body.getElementsByTagName("video");
-      if (originalCues.length && videos.length && videos[0].textTracks.length && videos[0].textTracks[0].cues.length) {
+      
+      if (originalCues.length && videos.length && videos[0].textTracks.length && videos[0].textTracks[0].cues.length) {  
         videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
+        
         originalCues.forEach((cue, i) => {
           (videos[0].textTracks[0].cues[i] as any).text = String(cue);
         });
+
       }
     }
   }
@@ -235,14 +250,18 @@
         let intervalStart = Date.now();
         checkVideoExistingInterval = setInterval(() => {
           let videos = document.body.getElementsByTagName("video");
+          
           if (!videos.length || !videos[0].textTracks || !videos[0].textTracks.length) {
             if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME) clearInterval(checkVideoExistingInterval);
             return;
           }
+          
           clearInterval(checkVideoExistingInterval);
           if (videos[0].textTracks[0].cues && videos[0].textTracks[0].cues.length) handleChangeVideoTracks();
+          
           videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
           videos[0].textTracks.addEventListener("change", handleChangeVideoTracks);
+
         }, CHECK_INTERVAL_TIME);
       }
     }

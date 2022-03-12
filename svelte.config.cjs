@@ -1,7 +1,15 @@
-const sveltePreprocess = require("svelte-preprocess");
+const preprocess = require('svelte-preprocess');
 
-module.exports = {
-    // Consult https://github.com/sveltejs/svelte-preprocess
-    // for more information about preprocessors
-    preprocess: sveltePreprocess()
-}
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	preprocess: [
+		preprocess(),
+	],
+    kit: {
+		vite: {
+			plugins: [],
+		},
+	},
+};
+
+module.exports = config;
