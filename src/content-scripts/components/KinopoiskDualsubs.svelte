@@ -137,48 +137,49 @@
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
     let cues = Array.from(video.textTracks[0].cues);
-    
-    cues.forEach((cue:any, i) => {
-      if (!cue.text.match(altCueRegExp)) {
-        originalCues[i] = String(cue.text);
-      }
-    })
 
-    let notFilled = [];
-    let fillWith = [];
+    for (let i = 0; i < cues.length; i++) {
+        let cue = cues[i];
+        let foundAltCuesPotential = [];
 
-    cues.forEach((cue, cueIndex) => {
-      let alternativeCue = "";
-      
-      parsedCues.forEach((el) => {
-        if (Math.abs(cue.startTime - (el.startTime/1000)) <= 2) {
-          alternativeCue = el.text;
+        let altCueI = 0;
+        while (true) {
+            if (altCueI >= parsedCues.length) break;
+            let altCue = parsedCues[altCueI];
+            let altCueStartTime = altCue.startTime / 1000;
+            let altCueEndTime = altCue.endTime / 1000;
+
+            if ((altCueEndTime >= cue.startTime && altCueStartTime <= cue.endTime)) {
+              foundAltCuesPotential.push(altCue);
+            }
+            altCueI++;
         }
-      });
+        
+        if (foundAltCuesPotential.length >= 2) {
+            let altCuesAreasPercentages = foundAltCuesPotential.map(altCue => {
+                let timeArea = altCue.endTime - cue.startTime;
+                if (altCue.endTime > cue.endTime) {
+                    timeArea = cue.endTime - altCue.startTime;
+                }
+                return timeArea/(cue.endTime - cue.startTime) * 100;
+            });
 
-      if (alternativeCue) {
-        fillWith.push(alternativeCue);
-        let currentCue = video.textTracks[0].cues[cueIndex] as any
-        if (!currentCue.text.match(altCueRegExp)) {
-          currentCue.text += `<span class="${altCueClass}">${alternativeCue.replace(/\n/g, " ")}</span>`;
+            let maxPercentageThreshold = 100 / (altCuesAreasPercentages.length);
+            let concurrentPercentageThreashold = (maxPercentageThreshold) * (60/50);
+            foundAltCuesPotential = foundAltCuesPotential.map((v, i) => {
+                if (altCuesAreasPercentages[i] < concurrentPercentageThreashold) return null;
+                return v
+            }).filter(v => v)
         }
-      } else {
-        notFilled.push(cueIndex);
-        fillWith.push(null);
-      }
-    });
 
-    notFilled.forEach((notFilledIndex) => {
-      let prevSubs = fillWith[notFilledIndex - 1]
-      if (prevSubs) {
-        let prevSubsReplics = prevSubs.split('\n');
-        let text = prevSubsReplics[prevSubsReplics.length - 1];
-        let currentCue = video.textTracks[0].cues[notFilledIndex] as any
-        if (!currentCue.text.match(altCueRegExp)) {
-          currentCue.text += `<span class="extention--alternative-cue">${text}</span>`;
+        foundAltCuesPotential = foundAltCuesPotential.map(p => p.text);
+        if (foundAltCuesPotential.length) {
+          let currentCue = video.textTracks[0].cues[i] as any
+          if (!currentCue.text.match(altCueRegExp)) {
+            currentCue.text += `<span class="${altCueClass}">${foundAltCuesPotential.join("\n").replace(/\n/g, " ")}</span>`;
+          }
         }
-      }
-    });
+    }
   }
 
   const clearCurrentCues = () => {
