@@ -4,35 +4,99 @@ export type Cue = {
   endTime: number;
   text: string;
 }
+
 export const srtParser = (function () {
   let timeMs = function (val:string):number {
-    let regex = /(\d+):(\d{2}):(\d{2}),(\d{3})/;
-    let parts = regex.exec(val);
-    let parsetNum:number[] = [];
-    if (parts === null) {
-      return 0;
+    
+
+    let timeAndMs = val.split(/([\d|:]+)(,|\.)(\d{3})/)
+    let msVal = parseInt(timeAndMs[3]);
+    
+    let timeVal = timeAndMs[1].split(':');
+    
+    let seconds = parseInt(timeVal[timeVal.length - 1]);
+    msVal += (seconds * 1000);
+    
+    if (timeVal.length >= 2) {
+      let minutes = parseInt(timeVal[timeVal.length - 2]);
+      msVal += (minutes * 60 * 1000);
     }
-    for (let i = 1; i < 5; i++) {
-      parsetNum[i] = parseInt(parts[i], 10);
-      if (isNaN(parsetNum[i])) parsetNum[i] = 0;
+    
+    if (timeVal.length >= 3) {
+      let hours = parseInt(timeVal[timeVal.length - 3]);
+      msVal += hours * 60 * 60 * 1000;
     }
-    return parsetNum[1] * 3600000 + parsetNum[2] * 60000 + parsetNum[3] * 1000 + parsetNum[4];
+
+    return msVal
   };
 
-  return function (data:string) {
-    data = data.replace(/\r/g, '');
-    let regex = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/g;
-    let dataRows = data.split(regex);
-    dataRows.shift();
-    let items:Cue[] = [];
-    for (let i = 0; i < dataRows.length; i += 4) {
-      items.push({
-        id: dataRows[i].trim(),
-        startTime: timeMs(dataRows[i + 1].trim()),
-        endTime: timeMs(dataRows[i + 2].trim()),
-        text: dataRows[i + 3].trim()
-      });
+  return function (data:string):Cue[] {
+    if (data.startsWith("WEBVTT")) {
+      data = data.replace(/WEBVTT([\n]+)?\n\n/, "")
+    } else {
+      data = data.replace(/\n$/g, "")
     }
-    return items;
-  };
+
+    data = data.replace(/\r/g, "")  
+
+    /*
+      [0] - id (title)
+      [1] - time (d:d:d.ddd --> d:d:d.ddd)
+      [2...\n] - replics to double \n
+    */
+    let dataRows = data.split('\n')
+    let cues:Cue[] = [];
+    let lastCue:Cue = {
+      id: "",
+      startTime: 0,
+      endTime: 0,
+      text: ""
+    }
+
+    let i = dataRows.length;
+    while (true) {
+
+      if (dataRows[i] == "") { // end of current cue
+        let replicaEndI = i;
+
+        while (true) {
+          i--
+          if (i < 0 || dataRows[i] == "") {
+            break
+          }
+        }
+        
+        let id = dataRows[i + 1]
+        let timeLine = dataRows[i + 2];
+        
+        let idLineIsTimeLine = id.match(/-->/g);
+        let timeLineIndex = i + 2;
+
+        if (idLineIsTimeLine) {          
+          timeLine = id
+          id = "";
+          timeLineIndex = i + 1;
+        }
+        
+        lastCue.id = id;
+
+        let timeLineCols = timeLine.split(' --> ')
+
+        lastCue.startTime = timeMs(timeLineCols[0].trim())
+        lastCue.endTime = timeMs(timeLineCols[1].trim())
+        lastCue.text = dataRows.slice(timeLineIndex + 1, replicaEndI).join("\n");
+        cues.push({
+          ...lastCue
+        })
+      }
+
+      if (i <= 0) {
+        break
+      }
+      i--;
+    }
+
+    cues = cues.reverse()
+    return cues
+  }
 })();

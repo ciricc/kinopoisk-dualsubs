@@ -31,7 +31,7 @@
   };
 
   let renderingSubtitles:PlayerSubtitles;
-  
+
   let checkPageUrlChangeInterval:NodeJS.Timeout;
   let checkVideoExistingInterval:NodeJS.Timeout;
   let checkVideoCuesInterval:NodeJS.Timeout;
@@ -70,6 +70,13 @@
     
     let streamsMetadata = await getContentStreamsMetadata(contentId);
     
+    if (watchParams.subtitleLanguage.startsWith("sid")) {
+      let index = parseInt(watchParams.subtitleLanguage.replace("sid", ""))
+      if (streamsMetadata.streams[0].subtitles[index]) {
+        watchParams.subtitleLanguage = streamsMetadata.streams[0].subtitles[index].language
+      }
+    }
+
     let subs = streamsMetadata.streams[0].subtitles.find((sub) => {
       return sub.language === LANGAUGES.RUS && watchParams.subtitleLanguage === LANGAUGES.ENG || sub.language === LANGAUGES.ENG && watchParams.subtitleLanguage === LANGAUGES.RUS;
     });
@@ -82,8 +89,13 @@
   const handleDomChangeLanguage = (e:MouseEvent) => {
     let el = e.target as HTMLElement;
     if (el && el.getAttribute("type") === "radio") {
-      if (el.getAttribute("value").includes("subtitles")) {
-        watchParams.subtitleLanguage = el.getAttribute("value").split("/")[1]
+      let val = el.getAttribute("value")
+      if (val.includes("subtitles") || val.includes("sid")) {
+        if (val.includes("sid")) {
+          watchParams.subtitleLanguage = val
+        } else {
+          watchParams.subtitleLanguage = el.getAttribute("value").split("/")[1]
+        }
       }
     }
   }
@@ -102,6 +114,7 @@
     let subs = await loadSubtitles(renderingSubtitles.url);
     if (!subs) return;
     parsedCues = srtParser(subs);
+    console.log("parsed cues", parsedCues);
   }
 
   const handleChangeVideoTracks = () => {
@@ -198,7 +211,6 @@
       stopIntervals();
       // Return original cues when disabling
       let videos = document.body.getElementsByTagName("video");
-      
       if (originalCues.length && videos.length && videos[0].textTracks.length && videos[0].textTracks[0].cues.length) {  
         videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
         
@@ -299,7 +311,7 @@
 
   :global(.kinopoisk-dualsubs--enable-dark-bg [class*="Subtitles__text"]) {
     background-color: rgba(0, 0, 0, .78);
-    font-size: 2.8rem;
+    font-size: 3rem;
     display: inline-block;
     width: max-content;
     padding: 2px 28px;
