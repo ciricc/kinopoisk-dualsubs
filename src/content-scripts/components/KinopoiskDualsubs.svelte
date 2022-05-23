@@ -14,8 +14,10 @@
   const CHECK_INTERVAL_TIME = 200;
 
   const altCueClass = "extention--alternative-cue";
+  const primaryCueClass = "extension--primary-cue";
   const altCueRegExp = new RegExp(`<span class="${altCueClass}">`);
   const activeBlackBgClass = "kinopoisk-dualsubs--enable-dark-bg";
+  const activeHighlightClass = "kinopoisk-dualsubs--enable-highlight-primary-cue";
 
   let cachedSubtiles:Record<string, string> = {};
   let pageUrl:string = document.location.href;
@@ -137,9 +139,17 @@
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
     let cues = Array.from(video.textTracks[0].cues);
-
+    
     for (let i = 0; i < cues.length; i++) {
         let cue = cues[i];
+        
+        if ('text' in cue) {
+          let c = cue as any
+          if (!c.text.toString().match(altCueRegExp)) {
+            originalCues[i] = String(c.text);
+          }
+        }
+        
         let foundAltCuesPotential = [];
 
         let altCueI = 0;
@@ -155,28 +165,11 @@
             altCueI++;
         }
         
-        if (foundAltCuesPotential.length >= 2) {
-            let altCuesAreasPercentages = foundAltCuesPotential.map(altCue => {
-                let timeArea = altCue.endTime - cue.startTime;
-                if (altCue.endTime > cue.endTime) {
-                    timeArea = cue.endTime - altCue.startTime;
-                }
-                return timeArea/(cue.endTime - cue.startTime) * 100;
-            });
-
-            let maxPercentageThreshold = 100 / (altCuesAreasPercentages.length);
-            let concurrentPercentageThreashold = (maxPercentageThreshold) * (60/50);
-            foundAltCuesPotential = foundAltCuesPotential.map((v, i) => {
-                if (altCuesAreasPercentages[i] < concurrentPercentageThreashold) return null;
-                return v
-            }).filter(v => v)
-        }
-
         foundAltCuesPotential = foundAltCuesPotential.map(p => p.text);
         if (foundAltCuesPotential.length) {
           let currentCue = video.textTracks[0].cues[i] as any
           if (!currentCue.text.match(altCueRegExp)) {
-            currentCue.text += `<span class="${altCueClass}">${foundAltCuesPotential.join("\n").replace(/\n/g, " ")}</span>`;
+            currentCue.text = `<span class="${primaryCueClass}">${currentCue.text}</span><span class="${altCueClass}">${foundAltCuesPotential.join("\n").replace(/\n/g, " ")}</span>`;
           }
         }
     }
@@ -212,6 +205,7 @@
       stopIntervals();
       // Return original cues when disabling
       let videos = document.body.getElementsByTagName("video");
+      console.log(videos.length, originalCues,  videos[0] ? videos[0].textTracks : null)
       if (originalCues.length && videos.length && videos[0].textTracks.length && videos[0].textTracks[0].cues.length) {  
         videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
         
@@ -288,6 +282,14 @@
     }
   }
 
+  $: {
+    if ($settings.hightlight_primary_cue_enabled) {
+      document.body.classList.add(activeHighlightClass)
+    } else {
+      document.body.classList.remove(activeHighlightClass);
+    }
+  }
+
   onDestroy(() => {
     stopIntervals();
   });
@@ -298,24 +300,19 @@
 
 <style>
   :global([class*="Subtitles__root"]){
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    flex-wrap: nowrap;
+    @apply flex items-center justify-center flex-col flex-nowrap;
   }
 
   :global(.extention--alternative-cue){
-    display: block;
-    font-size: 2.2rem;
+    @apply block text-4xl mt-3;
   }
 
   :global(.kinopoisk-dualsubs--enable-dark-bg [class*="Subtitles__text"]) {
-    background-color: rgba(0, 0, 0, .78);
-    font-size: 3rem;
-    display: inline-block;
-    width: max-content;
-    padding: 2px 28px;
+    @apply bg-black/80 px-6 py-4 pt-2;
+  }
+
+  :global(.kinopoisk-dualsubs--enable-highlight-primary-cue [class*="Subtitles__text"] .extension--primary-cue) {
+    @apply !text-yellow-300;
   }
 
 </style>

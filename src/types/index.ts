@@ -9,6 +9,7 @@ export type Message = {
 export type Settings = {
   doublesubs_enabled: boolean;
   black_background_enabled: boolean;
+  hightlight_primary_cue_enabled: boolean;
 }
 
 export type PlayerContentInformation = {

@@ -140,6 +140,9 @@
               <div class="flex">
                 <Thumbler id="black_background_enabled" bind:checked={$settings.black_background_enabled} label="Черный фон субтитров"/>
               </div>
+              <div class="flex">
+                <Thumbler id="hightlight_primary_cue_enabled" bind:checked={$settings.hightlight_primary_cue_enabled} label="Выделить цветом"/>
+              </div>
             </div>
           </div>
         </div>

@@ -10,7 +10,6 @@
   <span class="ml-6 text-dark-900 dark:text-true-gray-300 text-2xl font-medium">{label}</span>
 </label>
 
-
 <style>
   .toggle-bg:after {
     content: "";
