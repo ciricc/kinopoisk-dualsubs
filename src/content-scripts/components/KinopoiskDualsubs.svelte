@@ -122,7 +122,8 @@
   const handleChangeVideoTracks = () => {
     clearInterval(checkVideoCuesInterval);
     let intervalStart = Date.now()
-    checkVideoCuesInterval = setInterval(() => {
+    
+    const checkCues = () => {
       if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME) clearInterval(checkVideoCuesInterval);
       
       let videos = document.body.getElementsByTagName("video");
@@ -131,8 +132,12 @@
         clearInterval(checkVideoCuesInterval);
         fillAltCues();
       }
+    }
 
+    checkVideoCuesInterval = setInterval(() => {
+      checkCues()
     }, CHECK_INTERVAL_TIME);
+    checkCues()
   }
 
   const fillAltCues = () => {
@@ -205,7 +210,6 @@
       stopIntervals();
       // Return original cues when disabling
       let videos = document.body.getElementsByTagName("video");
-      console.log(videos.length, originalCues,  videos[0] ? videos[0].textTracks : null)
       if (originalCues.length && videos.length && videos[0].textTracks.length && videos[0].textTracks[0].cues.length) {  
         videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
         
@@ -264,10 +268,10 @@
           }
           
           clearInterval(checkVideoExistingInterval);
-          if (videos[0].textTracks[0].cues && videos[0].textTracks[0].cues.length) handleChangeVideoTracks();
-          
+
           videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
           videos[0].textTracks.addEventListener("change", handleChangeVideoTracks);
+          handleChangeVideoTracks();
 
         }, CHECK_INTERVAL_TIME);
       }
