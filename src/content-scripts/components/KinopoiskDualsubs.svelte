@@ -1,4 +1,5 @@
 <script lang="ts">
+
   import { getContentChildren, getContentMetadata, getContentStreamsMetadata, getWatchParams } from "../../lib/KinopoiskOTTApi";
   import type { PlayerContentInformation, PlayerSubtitles, PlayerWatchParams } from "../../types";
   import { onDestroy } from "svelte";
@@ -7,9 +8,9 @@
 
   const LANGAUGES = {
     RUS: "rus",
-    ENG: "eng"
+    ENG: "eng",
   }
-
+  
   const MAX_INTERVAL_WORK_TIME = 30000; // ms
   const CHECK_INTERVAL_TIME = 200;
 
@@ -25,7 +26,7 @@
   let contentInfo:PlayerContentInformation = {
     season: 0,
     episode: 0,
-    filmId: ""
+    filmId: "",
   }
   
   let watchParams:PlayerWatchParams = {
@@ -116,7 +117,6 @@
     let subs = await loadSubtitles(renderingSubtitles.url);
     if (!subs) return;
     parsedCues = srtParser(subs);
-    console.log("parsed cues", parsedCues);
   }
 
   const handleChangeVideoTracks = () => {
@@ -174,7 +174,7 @@
         if (foundAltCuesPotential.length) {
           let currentCue = video.textTracks[0].cues[i] as any
           if (!currentCue.text.match(altCueRegExp)) {
-            currentCue.text = `<span class="${primaryCueClass}">${currentCue.text}</span><span class="${altCueClass}">${foundAltCuesPotential.join("\n").replace(/\n/g, " ")}</span>`;
+            currentCue.text = `<span class="${primaryCueClass}">${currentCue.text}</span> <span class="${altCueClass}">${foundAltCuesPotential.join("\n").replace(/\n/g, " ")}</span>`;
           }
         }
     }

@@ -1,6 +1,6 @@
 {
   "name": "Двойные субтитры Кинопоиск HD",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "manifest_version": 3,
   "action": {
     "default_icon": {
@@ -8,7 +8,7 @@
       "48": "assets/icons/48.png",
       "128": "assets/icons/128.png"
     },
-    "default_title": "Popup"
+    "default_title": "Двойные субтитры Кинопоиск HD"
   },
   "icons": {
     "16": "assets/icons/16.png",

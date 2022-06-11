@@ -1,6 +1,5 @@
-const preprocess = require('svelte-preprocess');
-const { windi } = require('svelte-windicss-preprocess');
-
+import preprocess from 'svelte-preprocess';
+import { windi } from 'svelte-windicss-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -15,4 +14,4 @@ const config = {
 	},
 };
 
-module.exports = config;
+export default config;

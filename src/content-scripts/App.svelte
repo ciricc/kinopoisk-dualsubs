@@ -1,6 +1,6 @@
 <script lang="ts">
 
-  import { onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { sleep } from "../functions";
   import KinopoiskDualsubs from "./components/KinopoiskDualsubs.svelte";
   import Thumbler from "./components/Thumbler.svelte";
@@ -16,8 +16,9 @@
 
   let hideTimeoutNonActive:NodeJS.Timeout;
   let hideFullScreenControllerTimeout:NodeJS.Timeout;
-  let fullScreenElement:HTMLElement;
-  let isKinopoisk = false;
+  let checkVideoPlayerOpenedInterval:NodeJS.Timer;
+
+  let videoPlayerElement:HTMLElement;
 
   const setVisible = async (newVal:boolean) => {
     if (newVal) {
@@ -80,24 +81,20 @@
     visiblePopup.set(true);
   }
 
-  const handleResizePlayer = () => {
-    fullScreenElement = document.fullscreenElement as HTMLElement;
+  const isOpenedVideoPlayer = ():boolean => {
+    return !!videoPlayerElement;
   }
 
-  const isFullScreenPlayer = ():boolean => {
-    return fullScreenElement && document.querySelector(`[class*="Player__root"`) === fullScreenElement;
-  }
-
-  const mouseMovehandle = () => {
-    if (!visibleFullScreenController && isFullScreenPlayer()) {
+  const mouseMoveHandle = () => {
+    if (!visibleFullScreenController && isOpenedVideoPlayer()) {
       setVisibleFullScreenController(true);
     }
   }
 
   $: {
-    if (appContainer && isFullScreenPlayer() && visibleFullScreenController) {
-      fullScreenElement.appendChild(appContainer);
-    } else if (appContainer && !visibleFullScreenController && !isFullScreenPlayer()) {
+    if (appContainer && isOpenedVideoPlayer() && visibleFullScreenController) {
+      videoPlayerElement.appendChild(appContainer);
+    } else if (appContainer && !visibleFullScreenController && !isOpenedVideoPlayer()) {
       document.body.appendChild(appContainer);
     }
   }
@@ -110,8 +107,24 @@
     }
   }
 
+  onMount(() => {
+    checkVideoPlayerOpenedInterval = setInterval(() => {
+      let pl = document.querySelector(`[class*="Player__root"`) as HTMLVideoElement;
+      if (videoPlayerElement !== pl) {
+        videoPlayerElement = pl;
+        if (videoPlayerElement) {
+          setVisibleFullScreenController(true);
+        }
+      }
+    }, 300);
+  })
+
+  onDestroy(() => {
+    clearInterval(checkVideoPlayerOpenedInterval);
+  })
+
 </script>
-<svelte:window on:resize={handleResizePlayer} on:mousemove={mouseMovehandle}></svelte:window>
+<svelte:window on:mousemove={mouseMoveHandle}></svelte:window>
 
 {#if $settings}
   <KinopoiskDualsubs/>
@@ -119,7 +132,7 @@
 
 <div bind:this={appContainer} class="dark">
   {#if $settings}
-      {#if visibleFullScreenController && !visible}
+      {#if !visible}
         <div>
           <div class="pr-6 py-6 screenfixed" on:click={() => show()}>
             <div class="stroke-true-gray-50 text-shadow-dark-900 text-shadow-md w-25 h-25 items-center justify-center cursor-pointer hover:opacity-75 flex text-true-gray-50 transform transition-transform,opacity duration-100 {slideDownFullScreenController ? "translate-y-0 opacity-100" : "-translate-y-10 opacity-0 pointer-events-none"}">

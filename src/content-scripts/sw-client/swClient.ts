@@ -20,7 +20,7 @@ settings.subscribe((val) => {
 
 // Слушаем сообщения от браузера
 browser.runtime.onMessage.addListener((message) => {
-  let msg = message as Message;
+  const msg = message as Message;
   if (msg.type === "toggle_visible") {
     toggleVisible();
   }

@@ -1,11 +1,10 @@
 const API_ENDPOINT = "https://api.ott.kinopoisk.ru/v12/hd/";
 
 export const call = async (path:string) => {
-  let res = await fetch(API_ENDPOINT + path, {
+  const res = await fetch(API_ENDPOINT + path, {
     credentials: "include",
   });
-  let resJson = await res.json()
-  return resJson;
+  return await res.json();
 }
 
 export const getWatchParams = async (filmId:string) => {
