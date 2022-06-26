@@ -5,7 +5,7 @@
   import KinopoiskDualsubs from "./components/KinopoiskDualsubs.svelte";
   import Thumbler from "./components/Thumbler.svelte";
 
-  import {visiblePopup} from "./stores/global";
+  import { visiblePopup } from "./stores/visiblePopup";
   import { settings } from "./stores/settings";
 
   let visible = false;
@@ -51,7 +51,7 @@
   const createNonActiveTimeoutHide = () => {
     deleteNonActiveTimeoutHide();
     hideTimeoutNonActive = setTimeout(() => {
-      setHidden();
+      hide();
     }, visibleFullScreenController ? 550 : 1550);
   }
 
@@ -73,7 +73,7 @@
 
   }
 
-  const setHidden = () => {
+  const hide = () => {
     visiblePopup.set(false)
   }
 

@@ -1,20 +1,12 @@
 
 import browser from 'webextension-polyfill';
-
 import { defaultSettings, STORE_KDS_SETTINGS_FIELD } from '../values';
-import type { Message, Settings } from '../types';
+import type { Settings } from '../types';
 
-browser.action.onClicked.addListener((tab) => {
-  if (tab.id) {
-    try {
-      browser.tabs.sendMessage(tab.id, {
-        type: "toggle_visible",
-        data: {},
-      } as Message)
-    } catch (e) {
-      console.error("Can't  send message to this tab", e);
-    }
-  }
+browser.action.onClicked.addListener(() => {
+  browser.tabs.create({
+    url: "https://github.com/ciricc/kinopoisk-dualsubs#readme",
+  })
 });
 
 browser.storage.sync.get(STORE_KDS_SETTINGS_FIELD).then((v:Settings) => {

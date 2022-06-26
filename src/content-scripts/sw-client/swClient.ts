@@ -1,6 +1,5 @@
-import type { Message, Settings } from "../../types";
+import type { Settings } from "../../types";
 import browser from "webextension-polyfill";
-import { visiblePopup } from "../stores/global";
 import { STORE_KDS_SETTINGS_FIELD } from "../../values";
 import { settings } from "../stores/settings";
 
@@ -17,17 +16,3 @@ settings.subscribe((val) => {
     browser.storage.sync.set({[STORE_KDS_SETTINGS_FIELD]: val});
   }
 });
-
-// Слушаем сообщения от браузера
-browser.runtime.onMessage.addListener((message) => {
-  const msg = message as Message;
-  if (msg.type === "toggle_visible") {
-    toggleVisible();
-  }
-});
-
-const toggleVisible = () => {
-  let visible:boolean;
-  visiblePopup.subscribe((v) => visible = v)
-  visiblePopup.set(!visible);
-}
