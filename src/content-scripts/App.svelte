@@ -134,10 +134,7 @@
   {#if $settings}
       {#if !visible && videoPlayerElement}
         <div>
-          <div class="pr-6 py-6 screenfixed" on:click={(e) => {
-            console.log(e);
-            show();
-          }}>
+          <div class="pr-6 py-6 screenfixed" on:click={(e) => show()}>
             <div class="stroke-true-gray-50 text-shadow-dark-900 text-shadow-md w-25 h-25 items-center justify-center cursor-pointer hover:opacity-75 flex text-true-gray-50 transform transition-transform,opacity duration-100 {slideDownFullScreenController ? "translate-y-0 opacity-100" : "-translate-y-10 opacity-0 pointer-events-none"}">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
