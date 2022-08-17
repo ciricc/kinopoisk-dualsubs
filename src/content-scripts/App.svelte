@@ -109,7 +109,7 @@
 
   onMount(() => {
     checkVideoPlayerOpenedInterval = setInterval(() => {
-      let pl = document.querySelector(`[class*="Player__root"`) as HTMLVideoElement;
+      let pl = document.querySelector(`[class*="PlayerSkin_layout"]`) as HTMLVideoElement;
       if (videoPlayerElement !== pl) {
         videoPlayerElement = pl;
         if (videoPlayerElement) {
@@ -126,11 +126,10 @@
 </script>
 <svelte:window on:mousemove={mouseMoveHandle}></svelte:window>
 
-{#if $settings}
-  <KinopoiskDualsubs/>
-{/if}
-
 <div bind:this={appContainer} class="dark">
+  {#if $settings && videoPlayerElement}
+    <KinopoiskDualsubs/>
+  {/if}
   {#if $settings}
       {#if !visible && videoPlayerElement}
         <div>
