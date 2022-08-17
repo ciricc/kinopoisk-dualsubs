@@ -323,10 +323,10 @@
   {#if currentCueIndex != null && currentPrimaryCueText != "" && originalCuesPositionBottom}
     <div class="extension--cues" style="transform: translateY(-{originalCuesPositionBottom}px);">
       <div class="extension--cue-line extension--primary-cue">
-        {currentPrimaryCueText}
+        {@html currentPrimaryCueText}
       </div>
       <div class="extension--cue-line extension--alternative-cue">
-        {currentAltCues[currentCueIndex]}
+        {@html currentAltCues[currentCueIndex]}
       </div>
     </div>
   {/if}
@@ -342,7 +342,7 @@
   }
 
   :global(.extension--cues) {
-    @apply fixed flex flex-col text-shadow-xl shadow-black select-none transition-transform transform-gpu pointer-events-none w-full bottom-0 text-white text-4xl justify-center items-center;
+    @apply fixed flex flex-col px-4 text-shadow-xl shadow-black select-none transition-transform transform-gpu pointer-events-none w-full bottom-0 text-white text-4xl justify-center items-center;
   }
 
   :global(.extension--cue-line) {
