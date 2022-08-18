@@ -185,6 +185,8 @@
         foundAltCuesPotential = foundAltCuesPotential.map(p => p.text);
         if (foundAltCuesPotential.length) {
           currentAltCues.push(foundAltCuesPotential.join("\n").replace(/\n/g, " "));
+        } else {
+          currentAltCues.push("");
         }
     }
   }
@@ -320,14 +322,18 @@
 
 <svelte:body on:click={handleDomChangeLanguage} />
 {#if enabled}
-  {#if currentCueIndex != null && currentPrimaryCueText != "" && originalCuesPositionBottom}
+  {#if currentCueIndex != null && originalCuesPositionBottom}
     <div class="extension--cues" style="transform: translateY(-{originalCuesPositionBottom}px);">
-      <div class="extension--cue-line extension--primary-cue">
-        {@html currentPrimaryCueText}
-      </div>
-      <div class="extension--cue-line extension--alternative-cue">
-        {@html currentAltCues[currentCueIndex]}
-      </div>
+      {#if currentPrimaryCueText}
+        <div class="extension--cue-line extension--primary-cue">
+          {@html currentPrimaryCueText.replaceAll("\n", "<br/>")}
+        </div>
+      {/if}
+      {#if currentAltCues[currentCueIndex]}
+        <div class="extension--cue-line extension--alternative-cue">
+          {@html currentAltCues[currentCueIndex]}
+        </div>
+      {/if}
     </div>
   {/if}
 {/if}
@@ -346,7 +352,7 @@
   }
 
   :global(.extension--cue-line) {
-    @apply inline-block p-4;
+    @apply inline-block p-4 text-center;
   }
 
   :global(.kinopoisk-dualsubs--enable-dark-bg .extension--cue-line) {
