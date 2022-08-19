@@ -343,7 +343,8 @@
     @apply opacity-0;
   }
 
-  :global(.kinopoisk-dualsubs--enabled [class*="PlayerSkin_layout"] [class*="Layout_bottom"]) {
+  :global(.kinopoisk-dualsubs--enabled [class*="PlayerSkin_layout"] [class*="Layout_bottom"]),
+  :global(.kinopoisk-dualsubs--enabled [class*="PlayerSkin_layout"] [class*="ContextMenu_root"]) {
     @apply z-2;
   }
 
