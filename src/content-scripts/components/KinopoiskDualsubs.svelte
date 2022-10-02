@@ -177,8 +177,6 @@
         let leftSide = Math.max(parsedCue.startTime/1000, cue.startTime);
         
         let commonArea = rightSide - leftSide;
-        // console.log("Common area", commonArea, j, i, parsedCue, cue);
-        // break
         if (commonArea >= 0) {
           if (maxCommonArea < commonArea) {
             maxCommonArea = commonArea;
@@ -196,31 +194,6 @@
         currentAltCues.push("");
       }
     }
-
-    // for (let i = 0; i < cues.length; i++) {
-    //     let cue = cues[i];
-    //     let foundAltCuesPotential = [];
-    //     let altCueI = 0;
-
-    //     while (true) {
-    //         if (altCueI >= parsedCues.length) break;
-    //         let altCue = parsedCues[altCueI];
-    //         let altCueStartTime = altCue.startTime / 1000;
-    //         let altCueEndTime = altCue.endTime / 1000;
-
-    //         if ((altCueEndTime >= cue.startTime && altCueStartTime <= cue.endTime)) {
-    //           foundAltCuesPotential.push(altCue);
-    //         }
-    //         altCueI++;
-    //     }
-        
-    //     foundAltCuesPotential = foundAltCuesPotential.map(p => p.text);
-    //     if (foundAltCuesPotential.length) {
-    //       currentAltCues.push(foundAltCuesPotential.join("\n").replace(/\n/g, " "));
-    //     } else {
-    //       currentAltCues.push("");
-    //     }
-    // }
   }
 
   const clearCurrentCues = () => {
