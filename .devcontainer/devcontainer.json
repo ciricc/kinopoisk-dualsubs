@@ -1,5 +1,5 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.236.0/containers/typescript-node
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/typescript-node
 {
 	"name": "Node.js & TypeScript",
 	"build": {
@@ -8,7 +8,7 @@
 		// Append -bullseye or -buster to pin to an OS version.
 		// Use -bullseye variants on local on arm64/Apple Silicon.
 		"args": { 
-			"VARIANT": "18"
+			"VARIANT": "16-bullseye"
 		}
 	},
 
@@ -18,10 +18,7 @@
 		"vscode": {
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
-				"dbaeumer.vscode-eslint",
-				"svelte.svelte-vscode",
-				"voorjaar.windicss-intellisense",
-				"bradlc.vscode-tailwindcss"
+				"dbaeumer.vscode-eslint"
 			]
 		}
 	},
@@ -30,7 +27,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm i",
+	// "postCreateCommand": "yarn install",
 
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "node"

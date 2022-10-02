@@ -166,29 +166,61 @@
     let cues = Array.from(video.textTracks[0].cues);
     
     for (let i = 0; i < cues.length; i++) {
+      let maxCommonArea = 0;
+      let maxCommonAreaJ = -1;
+      
+      for (let j = 0; j < parsedCues.length; j++) {
+        let parsedCue = parsedCues[j]
         let cue = cues[i];
-        let foundAltCuesPotential = [];
-        let altCueI = 0;
-
-        while (true) {
-            if (altCueI >= parsedCues.length) break;
-            let altCue = parsedCues[altCueI];
-            let altCueStartTime = altCue.startTime / 1000;
-            let altCueEndTime = altCue.endTime / 1000;
-
-            if ((altCueEndTime >= cue.startTime && altCueStartTime <= cue.endTime)) {
-              foundAltCuesPotential.push(altCue);
-            }
-            altCueI++;
-        }
         
-        foundAltCuesPotential = foundAltCuesPotential.map(p => p.text);
-        if (foundAltCuesPotential.length) {
-          currentAltCues.push(foundAltCuesPotential.join("\n").replace(/\n/g, " "));
-        } else {
-          currentAltCues.push("");
+        let rightSide = Math.min(parsedCue.endTime/1000, cue.endTime);
+        let leftSide = Math.max(parsedCue.startTime/1000, cue.startTime);
+        
+        let commonArea = rightSide - leftSide;
+        // console.log("Common area", commonArea, j, i, parsedCue, cue);
+        // break
+        if (commonArea >= 0) {
+          if (maxCommonArea < commonArea) {
+            maxCommonArea = commonArea;
+            maxCommonAreaJ = j;
+          }
+          if (maxCommonAreaJ != -1 && maxCommonArea > commonArea) {
+            break
+          } 
         }
+      }
+
+      if (maxCommonAreaJ != -1) {
+        currentAltCues.push(parsedCues[maxCommonAreaJ].text.replace(/\n/g, " "));
+      } else {
+        currentAltCues.push("");
+      }
     }
+
+    // for (let i = 0; i < cues.length; i++) {
+    //     let cue = cues[i];
+    //     let foundAltCuesPotential = [];
+    //     let altCueI = 0;
+
+    //     while (true) {
+    //         if (altCueI >= parsedCues.length) break;
+    //         let altCue = parsedCues[altCueI];
+    //         let altCueStartTime = altCue.startTime / 1000;
+    //         let altCueEndTime = altCue.endTime / 1000;
+
+    //         if ((altCueEndTime >= cue.startTime && altCueStartTime <= cue.endTime)) {
+    //           foundAltCuesPotential.push(altCue);
+    //         }
+    //         altCueI++;
+    //     }
+        
+    //     foundAltCuesPotential = foundAltCuesPotential.map(p => p.text);
+    //     if (foundAltCuesPotential.length) {
+    //       currentAltCues.push(foundAltCuesPotential.join("\n").replace(/\n/g, " "));
+    //     } else {
+    //       currentAltCues.push("");
+    //     }
+    // }
   }
 
   const clearCurrentCues = () => {
@@ -324,16 +356,18 @@
 {#if enabled}
   {#if currentCueIndex != null && originalCuesPositionBottom}
     <div class="extension--cues" style="transform: translateY(-{originalCuesPositionBottom}px);">
-      {#if currentPrimaryCueText}
-        <div class="extension--cue-line extension--primary-cue">
-          {@html currentPrimaryCueText.replaceAll("\n", "<br/>")}
-        </div>
-      {/if}
-      {#if currentAltCues[currentCueIndex]}
-        <div class="extension--cue-line extension--alternative-cue">
-          {@html currentAltCues[currentCueIndex]}
-        </div>
-      {/if}
+      <div class="extension--cues-window">
+        {#if currentPrimaryCueText}
+          <div class="extension--cue-line extension--primary-cue">
+            {@html currentPrimaryCueText.replaceAll("\n", "<br/>")}
+          </div>
+        {/if}
+        {#if currentAltCues[currentCueIndex]}
+          <div class="extension--cue-line extension--alternative-cue">
+            {@html currentAltCues[currentCueIndex]}
+          </div>
+        {/if}
+      </div>
     </div>
   {/if}
 {/if}
@@ -352,11 +386,15 @@
     @apply fixed flex flex-col px-4 text-shadow-xl shadow-black select-none transition-transform transform-gpu pointer-events-none w-full bottom-0 text-white text-4xl justify-center items-center;
   }
 
-  :global(.extension--cue-line) {
-    @apply inline-block p-4 text-center;
+  :global(.extension--cues-window) {
+    @apply inline-flex flex-col justify-center items-center;
   }
 
-  :global(.kinopoisk-dualsubs--enable-dark-bg .extension--cue-line) {
+  :global(.extension--cue-line) {
+    @apply inline-block p-4 text-center w-full;
+  }
+
+  :global(.kinopoisk-dualsubs--enable-dark-bg .extension--cues-window) {
     @apply bg-black/80;
   }
 
