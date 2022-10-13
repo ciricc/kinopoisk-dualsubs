@@ -8,6 +8,7 @@
 
   const LANGAUGES = {
     RUS: "rus",
+    RUSX18: "rus-x-18",
     ENG: "eng",
   }
   
@@ -44,6 +45,7 @@
   let currentAltCues:string[] = [];
   let currentCueIndex:null|number = null;
   let currentPrimaryCueText = "";
+  let videoPaused:boolean = false;
 
   const getContentInformation = ():PlayerContentInformation => {
     let currentLocation = document.location.pathname.split('/');
@@ -58,23 +60,28 @@
   }
 
   const updateWatchParams = async () => {
+    console.log("Getting watch params by film", contentInfo.filmId);
     watchParams = await getWatchParams(contentInfo.filmId);
+    console.log("Loaded watch params", watchParams)
   }
 
   const loadContentSubtitles = async () => {
+    console.log("Loading subtitles", contentInfo.filmId);
     let metadata = await getContentMetadata(contentInfo.filmId);
     let contentId = contentInfo.filmId;
 
     if (metadata.contentType === "tv-series" && (contentInfo.season && contentInfo.episode)) {
       let tv = await getContentChildren(contentId);
-      let episode = tv.seasons[contentInfo.season - 1].episodes[contentInfo.episode - 1];
+      console.log("Loaded tv", tv.seasons)
+      let episode = tv.seasons[contentInfo.season - 1].episodes.find(ep => ep.number === contentInfo.episode);
       contentId = contentId ? episode.filmId as string : "";
     }
     
     if (!contentId) return;
     
     let streamsMetadata = await getContentStreamsMetadata(contentId);
-    
+    console.log("MD loaded", streamsMetadata, contentId, getContentInformation());
+
     if (watchParams.subtitleLanguage.startsWith("sid")) {
       let index = parseInt(watchParams.subtitleLanguage.replace("sid", ""))
       if (streamsMetadata.streams[0].subtitles[index]) {
@@ -83,7 +90,7 @@
     }
 
     let subs = streamsMetadata.streams[0].subtitles.find((sub) => {
-      return sub.language === LANGAUGES.RUS && watchParams.subtitleLanguage === LANGAUGES.ENG || sub.language === LANGAUGES.ENG && watchParams.subtitleLanguage === LANGAUGES.RUS;
+      return (sub.language === LANGAUGES.RUS || sub.language === LANGAUGES.RUSX18) && watchParams.subtitleLanguage === LANGAUGES.ENG || sub.language === LANGAUGES.ENG && (watchParams.subtitleLanguage === LANGAUGES.RUS || watchParams.subtitleLanguage === LANGAUGES.RUSX18);
     });
 
     if (subs) {
@@ -135,6 +142,15 @@
     }
     currentCueIndex = null;
     currentPrimaryCueText = "";
+  }
+
+  const handleChangeVideoState = (e:Event) => {
+    const video = e.target as HTMLVideoElement;
+    if (video.paused) {
+      videoPaused = true;
+    } else {
+      videoPaused = false;
+    }
   }
 
   const handleChangeVideoTracks = () => {
@@ -224,6 +240,7 @@
       }, 50);
 
       checkPageUrlChangeInterval = setInterval(() => {
+        console.log("Check page url changed", pageUrl)
         if (pageUrl != document.location.href) {
           pageUrl = document.location.href;
         }
@@ -244,6 +261,8 @@
       stopIntervals();
     }
   }
+
+  $: console.log("Video paused", videoPaused);
 
   // Check page url changing (film, tv series)
   $: {
@@ -290,12 +309,18 @@
             if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME) clearInterval(checkVideoExistingInterval);
             return;
           }
-          
+
           clearInterval(checkVideoExistingInterval);
 
           videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
+          videos[0].removeEventListener("play", handleChangeVideoState);
+          videos[0].removeEventListener("pause", handleChangeVideoState);
           videos[0].textTracks.addEventListener("change", handleChangeVideoTracks);
+          videos[0].addEventListener("play", handleChangeVideoState);
+          videos[0].addEventListener("pause", handleChangeVideoState);
           
+          
+          videoPaused = videos[0].paused;
           handleChangeVideoTracks();
 
         }, CHECK_INTERVAL_TIME);
@@ -328,7 +353,7 @@
 <svelte:body on:click={handleDomChangeLanguage} />
 {#if enabled}
   {#if currentCueIndex != null && originalCuesPositionBottom}
-    <div class="extension--cues" style="transform: translateY(-{originalCuesPositionBottom}px);">
+    <div class="extension--cues {videoPaused ? "kplayer--paused" : ""}" style="transform: translateY(-{originalCuesPositionBottom}px);">
       <div class="extension--cues-window">
         {#if currentPrimaryCueText}
           <div class="extension--cue-line extension--primary-cue">
@@ -368,7 +393,11 @@
   }
 
   :global(.extension--cue-line.extension--alternative-cue) {
-    @apply pt-1 text-3xl text-true-gray-300;
+    @apply pt-1 text-3xl text-true-gray-300 transition-all ease-out duration-200;
+  }
+
+  :global(.kplayer--paused .extension--cue-line.extension--alternative-cue) {
+    @apply text-4xl text-true-gray-200 pt-2 pb-6;
   }
 
   :global(.kinopoisk-dualsubs--enable-dark-bg .extension--cues-window) {
