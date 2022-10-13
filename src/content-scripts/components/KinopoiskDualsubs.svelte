@@ -364,11 +364,15 @@
   }
 
   :global(.extension--cue-line) {
-    @apply inline-block p-4 text-center w-full;
+    @apply inline-block p-4 px-8 text-center w-full;
+  }
+
+  :global(.extension--cue-line.extension--alternative-cue) {
+    @apply pt-1 text-3xl text-true-gray-300;
   }
 
   :global(.kinopoisk-dualsubs--enable-dark-bg .extension--cues-window) {
-    @apply bg-black/80;
+    @apply bg-black/80 rounded-lg overflow-hidden;
   }
 
   :global(.extension--primary-cue) {
