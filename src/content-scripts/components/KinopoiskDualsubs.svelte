@@ -381,7 +381,7 @@
   }
 
   :global(.extension--cues) {
-    @apply fixed flex flex-col px-4 text-shadow-xl shadow-black select-none transition-transform transform-gpu pointer-events-none w-full bottom-0 text-white text-4xl justify-center items-center;
+    @apply fixed flex flex-col px-4 text-shadow-xl shadow-black select-none duration-100 transition-transform transform-gpu pointer-events-none w-full bottom-0 text-white text-4xl justify-center items-center;
   }
 
   :global(.extension--cues-window) {
@@ -393,11 +393,11 @@
   }
 
   :global(.extension--cue-line.extension--alternative-cue) {
-    @apply pt-1 text-3xl text-true-gray-300 transition-all ease-out duration-200;
+    @apply pt-2 pb-6 text-4xl text-true-gray-300 transition-all ease-out duration-200;
   }
 
   :global(.kplayer--paused .extension--cue-line.extension--alternative-cue) {
-    @apply text-4xl text-true-gray-200 pt-2 pb-6;
+    @apply text-true-gray-100;
   }
 
   :global(.kinopoisk-dualsubs--enable-dark-bg .extension--cues-window) {
