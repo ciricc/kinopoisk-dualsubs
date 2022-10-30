@@ -19,9 +19,9 @@
 
 Чаще всего, обновление доходит в магазины только через нескольно дней, после того, как оно появится во вкладке с [релизами](https://github.com/ciricc/kinopoisk-dualsubs/releases).
 
-|[Chrome Webstore](https://chrome.google.com/webstore/detail/двойные-субтитры-кинопоис/imdaibjngbfnhodjfcbkaiegehaniglh) |
-| -- |
-|<a href="https://chrome.google.com/webstore/detail/двойные-субтитры-кинопоис/imdaibjngbfnhodjfcbkaiegehaniglh"><img src="https://user-images.githubusercontent.com/20687373/181228666-cc05758a-4fce-4a6f-ab76-9cbb0d7dd1db.png" width="128px"/></a> |
+|[Opera Addons](https://addons.opera.com/en/extensions/details/dvoinye-subtitry-kinopoisk-hd/) |[Chrome Webstore](https://chrome.google.com/webstore/detail/двойные-субтитры-кинопоис/imdaibjngbfnhodjfcbkaiegehaniglh) |
+|-- | -- |
+| <a href="https://addons.opera.com/ru/extensions/details/dvoinye-subtitry-kinopoisk-hd/"><img src="https://addons-static.operacdn.com/static/catalog/images/get-opera/opera-logo.png" width="128px"/></a> |<a href="https://chrome.google.com/webstore/detail/двойные-субтитры-кинопоис/imdaibjngbfnhodjfcbkaiegehaniglh"><img src="https://user-images.githubusercontent.com/20687373/181228666-cc05758a-4fce-4a6f-ab76-9cbb0d7dd1db.png" width="128px"/></a> |
 
 ### Вручную
 
