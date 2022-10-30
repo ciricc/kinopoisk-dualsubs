@@ -11,6 +11,13 @@
     RUSX18: "rus-x-18",
     ENG: "eng",
   }
+
+  enum CogType {
+    Rate = "rate",
+    SubtitlesSize = "subtitlesSize",
+    Quality = "quality",
+    Unknown = "",
+  }
   
   const MAX_INTERVAL_WORK_TIME = 30000; // ms
   const CHECK_INTERVAL_TIME = 200;
@@ -22,6 +29,7 @@
   let cachedSubtiles:Record<string, string> = {};
   let pageUrl:string = document.location.href;
   let originalCuesPositionBottom = 0;
+  let currentCogOpened:CogType|null = null;
   
   let contentInfo:PlayerContentInformation = {
     season: 0,
@@ -46,6 +54,8 @@
   let currentCueIndex:null|number = null;
   let currentPrimaryCueText = "";
   let videoPaused:boolean = false;
+  let subtitlesSizeRatio:number = 1;
+  let windowCuesElement:HTMLElement|null = null;
 
   const getContentInformation = ():PlayerContentInformation => {
     let currentLocation = document.location.pathname.split('/');
@@ -100,13 +110,43 @@
 
   const handleDomChangeLanguage = (e:MouseEvent) => {
     let el = e.target as HTMLElement;
+    if (el && el.getAttribute("class") && el.getAttribute("class").includes("styles_subtitles-size-button")) {
+      currentCogOpened = CogType.SubtitlesSize;
+      return
+    }
     if (el && el.getAttribute("type") === "radio") {
       let val = el.getAttribute("value")
-      if (val.includes("subtitles") || val.includes("sid")) {
-        if (val.includes("sid")) {
-          watchParams.subtitleLanguage = val
-        } else {
-          watchParams.subtitleLanguage = el.getAttribute("value").split("/")[1]
+
+      console.log("Click radio element", el.parentNode, el.parentElement, val)
+      if (Object.values(CogType).includes(val as CogType)) {
+        // Пользователь нажал на одну из опций в шестеренке
+        currentCogOpened = val as CogType;
+      } else {
+        // Если мы сейчас уже открыли какую-то шестеренку - проверяем значение
+        const isAudioIdRadio = val.includes("aid");
+        const isSubtitlesIdRadio = val.includes("sid") || val.includes("subtitles");
+
+        if (isSubtitlesIdRadio || isAudioIdRadio) {
+          
+          if (isSubtitlesIdRadio) {
+            if (val.includes("sid")) {
+              watchParams.subtitleLanguage = val
+            } else {
+              watchParams.subtitleLanguage = el.getAttribute("value").split("/")[1]
+            }
+          } else if (val == "") {
+            watchParams.subtitleLanguage = "";
+            clearSubtitles();
+          }
+
+          return
+        }
+
+        if (currentCogOpened) {
+          console.log("Current opened cog", currentCogOpened);
+          if (currentCogOpened == CogType.SubtitlesSize) {
+            subtitlesSizeRatio = +val;
+          }
         }
       }
     }
@@ -166,6 +206,8 @@
         clearInterval(checkVideoCuesInterval);
         fillAltCues();
         videos[0].textTracks[0].addEventListener("cuechange", changeCueHandler);
+      } else {
+        clearSubtitles()
       }
     }
 
@@ -173,6 +215,13 @@
       checkCues()
     }, CHECK_INTERVAL_TIME);
     checkCues()
+  }
+
+  const clearSubtitles = () => {
+    currentPrimaryCueText = "";
+    currentCueIndex = null;
+    clearCurrentCues();
+    currentAltCues = [];
   }
 
   const fillAltCues = () => {
@@ -235,12 +284,16 @@
         const elem = document.querySelector(`[class*="Subtitles_root"]`)
         if (elem) {
           const originalCuesRect = elem.getBoundingClientRect();
-          originalCuesPositionBottom = window.innerHeight - (originalCuesRect.y + originalCuesRect.height);
+          const windowCuesElementRect:DOMRect|null = windowCuesElement ? windowCuesElement.getBoundingClientRect() : null;
+          let heightOffset = originalCuesRect.height;
+          if (originalCuesRect.y < (window.innerHeight / 2)) {
+            heightOffset = Math.max(originalCuesRect.height, windowCuesElementRect ? windowCuesElementRect.height : null);
+          }
+          originalCuesPositionBottom = window.innerHeight - (originalCuesRect.y + heightOffset);
         }
       }, 50);
 
       checkPageUrlChangeInterval = setInterval(() => {
-        console.log("Check page url changed", pageUrl)
         if (pageUrl != document.location.href) {
           pageUrl = document.location.href;
         }
@@ -263,6 +316,7 @@
   }
 
   $: console.log("Video paused", videoPaused);
+  $: console.log("Changed subtitles size ratio", subtitlesSizeRatio)
 
   // Check page url changing (film, tv series)
   $: {
@@ -344,6 +398,8 @@
     }
   }
 
+  $: console.log("Cues element", windowCuesElement)
+
   onDestroy(() => {
     stopIntervals();
   });
@@ -353,7 +409,7 @@
 <svelte:body on:click={handleDomChangeLanguage} />
 {#if enabled}
   {#if currentCueIndex != null && originalCuesPositionBottom}
-    <div class="extension--cues {videoPaused ? "kplayer--paused" : ""}" style="transform: translateY(-{originalCuesPositionBottom}px);">
+    <div bind:this={windowCuesElement} class="extension--cues {videoPaused ? "kplayer--paused" : ""}" style="transform: translateY(-{originalCuesPositionBottom}px) scale({subtitlesSizeRatio});">
       <div class="extension--cues-window">
         {#if currentPrimaryCueText}
           <div class="extension--cue-line extension--primary-cue">
@@ -371,7 +427,8 @@
 {/if}
 
 <style>
-  :global(.kinopoisk-dualsubs--enabled [class*="Subtitles_root"] [class*="Subtitles_text"]) {
+  :global(.kinopoisk-dualsubs--enabled [class*="Subtitles_root"] [class*="Subtitles_text"]),
+  :global(.kinopoisk-dualsubs--enabled [class*="Subtitles_root"] [class*="Subtitles_new-text"]) {
     @apply opacity-0;
   }
 
@@ -401,7 +458,7 @@
   }
 
   :global(.kinopoisk-dualsubs--enable-dark-bg .extension--cues-window) {
-    @apply bg-black/80 rounded-lg overflow-hidden;
+    @apply bg-black/75 rounded-lg overflow-hidden;
   }
 
   :global(.extension--primary-cue) {

@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { chromeExtension } from "vite-plugin-chrome-extension";
+
 import WindiCSS from 'vite-plugin-windicss';
 import preprocess from 'svelte-preprocess';
 
@@ -10,11 +11,12 @@ export default defineConfig({
     rollupOptions: {
       input: "src/manifest.json",
     },
+    minify: true,
   },
   plugins: [
     svelte({
       preprocess: [
-        preprocess(),
+        preprocess({}),
       ],
     }),
     WindiCSS(),

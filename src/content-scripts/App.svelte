@@ -107,6 +107,12 @@
     }
   }
 
+  $: {
+    if ($settings) {
+      $settings.black_background_enabled = true;
+    }
+  }
+
   onMount(() => {
     checkVideoPlayerOpenedInterval = setInterval(() => {
       let pl = document.querySelector(`[class*="PlayerSkin_layout"]`) as HTMLVideoElement;
@@ -148,9 +154,6 @@
             <div class="{slideDown ? "translate-y-0 opacity-100" : "-translate-y-10 opacity-0 pointer-events-none"} widget dark:bg-dark-800 dark:text-gray-300">
               <div class="flex pt-6">
                 <Thumbler id="enabled" bind:checked={$settings.doublesubs_enabled} label="Двойные субтитры"/>
-              </div>
-              <div class="flex">
-                <Thumbler id="black_background_enabled" bind:checked={$settings.black_background_enabled} label="Черный фон субтитров"/>
               </div>
               <div class="flex">
                 <Thumbler id="hightlight_primary_cue_enabled" bind:checked={$settings.hightlight_primary_cue_enabled} label="Выделить цветом"/>

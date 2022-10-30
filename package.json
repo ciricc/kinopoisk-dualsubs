@@ -1,6 +1,6 @@
 {
     "name": "kinopoisk-dualsubs",
-    "version": "1.4.1",
+    "version": "1.5.0",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
@@ -9,20 +9,20 @@
     },
     "type": "module",
     "devDependencies": {
-        "@sveltejs/vite-plugin-svelte": "^1.0.0-next.39",
-        "@types/webextension-polyfill": "^0.8.2",
-        "@typescript-eslint/eslint-plugin": "^5.27.1",
-        "@typescript-eslint/parser": "^5.27.1",
-        "@windicss/plugin-utils": "^1.8.3",
-        "eslint": "^8.17.0",
-        "eslint-plugin-svelte3": "^4.0.0",
-        "svelte": "^3.46.4",
-        "svelte-preprocess": "^4.10.4",
-        "svelte-windicss-preprocess": "^4.2.6",
-        "typescript": "^4.7.3",
-        "vite": "^2.8.6",
+        "@sveltejs/vite-plugin-svelte": "1.0.0-next.39",
+        "@types/webextension-polyfill": "0.8.2",
+        "@typescript-eslint/eslint-plugin": "5.27.1",
+        "@typescript-eslint/parser": "5.27.1",
+        "@windicss/plugin-utils": "1.8.3",
+        "eslint": "8.17.0",
+        "eslint-plugin-svelte3": "4.0.0",
+        "svelte": "3.46.4",
+        "svelte-preprocess": "4.10.4",
+        "svelte-windicss-preprocess": "4.2.6",
+        "typescript": "4.7.3",
+        "vite": "2.8.6",
         "vite-plugin-chrome-extension": "0.0.7",
-        "vite-plugin-windicss": "^1.8.3",
-        "webextension-polyfill": "^0.8.0"
+        "vite-plugin-windicss": "1.8.3",
+        "webextension-polyfill": "0.8.0"
     }
 }
