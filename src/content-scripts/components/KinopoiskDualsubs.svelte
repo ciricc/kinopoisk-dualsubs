@@ -5,6 +5,7 @@
   import { onDestroy } from "svelte";
   import { settings } from "../stores/settings";
   import { Cue, srtParser } from "../../lib/srtParser";
+    import PlayerHotKeys from "./PlayerHotKeys.svelte";
 
   const LANGAUGES = {
     RUS: "rus",
@@ -19,7 +20,7 @@
     Unknown = "",
   }
   
-  const MAX_INTERVAL_WORK_TIME = 30000; // ms
+  const MAX_INTERVAL_WORK_TIME = 60000; // ms
   const CHECK_INTERVAL_TIME = 200;
 
   const activeBlackBgClass = "kinopoisk-dualsubs--enable-dark-bg";
@@ -54,7 +55,8 @@
   let currentCueIndex:null|number = null;
   let currentPrimaryCueText = "";
   let videoPaused:boolean = false;
-  let subtitlesSizeRatio:number = 1;
+  let lsSubtitlesRatio = +localStorage.getItem("subtitlesRatio")
+  let subtitlesSizeRatio:number = isNaN(lsSubtitlesRatio) ? 1 : lsSubtitlesRatio;
   let windowCuesElement:HTMLElement|null = null;
 
   const getContentInformation = ():PlayerContentInformation => {
@@ -196,12 +198,9 @@
   const handleChangeVideoTracks = () => {
     clearInterval(checkVideoCuesInterval);
     let intervalStart = Date.now()
-    
-    const checkCues = () => {
+    const checkCues = async () => {
       if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME) clearInterval(checkVideoCuesInterval);
-      
       let videos = document.body.getElementsByTagName("video");
-      
       if (videos.length && videos[0].textTracks && videos[0].textTracks.length && videos[0].textTracks[0].cues && videos[0].textTracks[0].cues.length) {
         clearInterval(checkVideoCuesInterval);
         fillAltCues();
@@ -220,7 +219,6 @@
   const clearSubtitles = () => {
     currentPrimaryCueText = "";
     currentCueIndex = null;
-    clearCurrentCues();
     currentAltCues = [];
   }
 
@@ -229,7 +227,6 @@
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
     let cues = Array.from(video.textTracks[0].cues);
-    
     for (let i = 0; i < cues.length; i++) {
       let maxCommonArea = 0;
       let maxCommonAreaJ = -1;
@@ -264,6 +261,48 @@
   const clearCurrentCues = () => {
     renderingSubtitles=null;
     parsedCues = [];
+  }
+
+  const stepReplica = (i:number) => {
+    let videos = document.body.getElementsByTagName("video");
+    let video = videos[0];
+    if (!video || !video.textTracks.length || !video.textTracks[0].cues) return;
+    let cues = Array.from(video.textTracks[0].cues);
+    if (cues.length) {
+      let activeCues = video.textTracks[0].activeCues;
+      if (activeCues.length) {
+        let activeCue = activeCues[0];
+        let activeCuesIndex = cues.indexOf(activeCue);
+        if (activeCuesIndex != -1) {
+          let newReplicaIndex = activeCuesIndex + i;
+          if (newReplicaIndex >= cues.length) {
+            newReplicaIndex = cues.length
+          } else if (newReplicaIndex < 0) {
+            newReplicaIndex = 0;
+          }
+          video.currentTime = cues[newReplicaIndex].startTime
+          return
+        }
+      } else {
+        let currentTime = video.currentTime;
+        let newCue:TextTrackCue|null = null;
+        if (i > 0) {
+          newCue = cues.find(el => el.startTime > currentTime);
+        } else {
+          for (let i = 0; i < cues.length; i++) {
+            let cue = cues[i];
+            if (cue.startTime < currentTime) {
+              newCue = cue;
+            } else {
+              break;
+            }
+          }
+        }
+        if (newCue) {
+          video.currentTime = newCue.startTime;
+        }
+      }
+    }
   }
 
   const stopIntervals = () => {
@@ -355,6 +394,7 @@
     if (parsedCues) {
       clearInterval(checkVideoExistingInterval);
       if (parsedCues.length) {
+        console.log("parsed cues changed", parsedCues.length)
         let intervalStart = Date.now();
         checkVideoExistingInterval = setInterval(() => {
           let videos = document.body.getElementsByTagName("video");
@@ -367,9 +407,13 @@
           clearInterval(checkVideoExistingInterval);
 
           videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
+          
           videos[0].removeEventListener("play", handleChangeVideoState);
           videos[0].removeEventListener("pause", handleChangeVideoState);
+
+
           videos[0].textTracks.addEventListener("change", handleChangeVideoTracks);
+
           videos[0].addEventListener("play", handleChangeVideoState);
           videos[0].addEventListener("pause", handleChangeVideoState);
           
@@ -398,8 +442,6 @@
     }
   }
 
-  $: console.log("Cues element", windowCuesElement)
-
   onDestroy(() => {
     stopIntervals();
   });
@@ -407,6 +449,7 @@
 </script>
 
 <svelte:body on:click={handleDomChangeLanguage} />
+<PlayerHotKeys enabled={$settings.hotkeys_enabled} on:nextreplica={() => stepReplica(1)} on:prevreplica={() => stepReplica(-1)}/>
 {#if enabled}
   {#if currentCueIndex != null && originalCuesPositionBottom}
     <div bind:this={windowCuesElement} class="extension--cues {videoPaused ? "kplayer--paused" : ""}" style="transform: translateY(-{originalCuesPositionBottom}px) scale({subtitlesSizeRatio});">

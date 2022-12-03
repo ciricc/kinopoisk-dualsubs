@@ -7,6 +7,7 @@
 
   import { visiblePopup } from "./stores/visiblePopup";
   import { settings } from "./stores/settings";
+  import HotKey from "./components/HotKey.svelte";
 
   let visible = false;
   let slideDown = false;
@@ -19,14 +20,19 @@
   let checkVideoPlayerOpenedInterval:NodeJS.Timer;
 
   let videoPlayerElement:HTMLElement;
+  let showedControls = false;
 
   const setVisible = async (newVal:boolean) => {
     if (newVal) {
+      showedControls = true
       visible = newVal;
       await tick();
       slideDown = true;
       createNonActiveTimeoutHide();
     } else {
+      if (showedControls && $settings.show_hotkeys_onboarding) {
+        $settings.show_hotkeys_onboarding = false;
+      }
       slideDown = false;
       await tick();
       await sleep(100);
@@ -139,7 +145,7 @@
   {#if $settings}
       {#if !visible && videoPlayerElement}
         <div>
-          <div class="pr-6 py-6 screenfixed" on:click={(e) => show()}>
+          <div class="pr-6 py-6 screenfixed" on:click={() => show()}>
             <div class="stroke-true-gray-50 text-shadow-dark-900 text-shadow-md w-25 h-25 items-center justify-center cursor-pointer hover:opacity-75 flex text-true-gray-50 transform transition-transform,opacity duration-100 {slideDownFullScreenController ? "translate-y-0 opacity-100" : "-translate-y-10 opacity-0 pointer-events-none"}">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
@@ -158,6 +164,21 @@
               <div class="flex">
                 <Thumbler id="hightlight_primary_cue_enabled" bind:checked={$settings.hightlight_primary_cue_enabled} label="Выделить цветом"/>
               </div>
+              <div class="flex">
+                <Thumbler id="hotkeys_enabled" bind:checked={$settings.hotkeys_enabled} on:change={() => {
+                  $settings.show_hotkeys_onboarding = true
+                }} label="Горячие клавиши"/>
+              </div>
+              {#if $settings && $settings.hotkeys_enabled && $settings.show_hotkeys_onboarding}
+              <div class="px-6 text-2xl pt-6 pb-2 dark:text-true-gray-200">
+                <div class="flex space-x-4 items-center py-2">
+                  <HotKey>Ctrl</HotKey><span>+</span><HotKey>&lt;</HotKey><span class="pl-4 flex-1">Предыдущая реплика</span>
+                </div>
+                <div class="flex space-x-4 items-center py-2">
+                  <HotKey>Ctrl</HotKey><span>+</span><HotKey>&gt;</HotKey><span class="pl-4 flex-1">Следующая реплика</span>
+                </div>
+              </div>
+              {/if}
             </div>
           </div>
         </div>
