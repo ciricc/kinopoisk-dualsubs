@@ -56,7 +56,7 @@
   let currentPrimaryCueText = "";
   let videoPaused:boolean = false;
   let lsSubtitlesRatio = +localStorage.getItem("subtitlesRatio")
-  let subtitlesSizeRatio:number = isNaN(lsSubtitlesRatio) ? 1 : lsSubtitlesRatio;
+  let subtitlesSizeRatio:number = (isNaN(lsSubtitlesRatio) ? 1 : lsSubtitlesRatio) || 1;
   let windowCuesElement:HTMLElement|null = null;
 
   const getContentInformation = ():PlayerContentInformation => {

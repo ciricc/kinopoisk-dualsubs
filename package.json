@@ -1,6 +1,6 @@
 {
     "name": "kinopoisk-dualsubs",
-    "version": "1.6.0",
+    "version": "1.6.1",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
@@ -17,8 +17,8 @@
         "@windicss/plugin-utils": "1.8.3",
         "eslint": "8.17.0",
         "eslint-plugin-svelte3": "4.0.0",
-        "svelte": "^3.53.1",
-        "svelte-preprocess": "^4.10.7",
+        "svelte": "^3.55.0",
+        "svelte-preprocess": "^5.0.0",
         "svelte-windicss-preprocess": "^4.2.8",
         "typescript": "4.7.3",
         "vite": "2.8.6",
