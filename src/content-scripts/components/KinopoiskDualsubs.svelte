@@ -1,66 +1,72 @@
 <script lang="ts">
-
-  import { getContentChildren, getContentMetadata, getContentStreamsMetadata, getWatchParams } from "../../lib/KinopoiskOTTApi";
-  import type { PlayerContentInformation, PlayerSubtitles, PlayerWatchParams } from "../../types";
+  import {
+    getContentChildren,
+    getContentMetadata,
+    getContentStreamsMetadata,
+    getWatchParams,
+  } from "../../lib/KinopoiskOTTApi";
+  import type {
+    PlayerContentInformation,
+    PlayerSubtitles,
+    PlayerWatchParams,
+  } from "../../types";
   import { onDestroy } from "svelte";
   import { settings } from "../stores/settings";
   import { Cue, srtParser } from "../../lib/srtParser";
-    import PlayerHotKeys from "./PlayerHotKeys.svelte";
+  import PlayerHotKeys from "./PlayerHotKeys.svelte";
 
   const LANGAUGES = {
     RUS: "rus",
     RUSX18: "rus-x-18",
     ENG: "eng",
-  }
+  };
 
   enum CogType {
     Rate = "rate",
-    SubtitlesSize = "subtitlesSize",
     Quality = "quality",
     Unknown = "",
   }
-  
+
   const MAX_INTERVAL_WORK_TIME = 60000; // ms
   const CHECK_INTERVAL_TIME = 200;
 
   const activeBlackBgClass = "kinopoisk-dualsubs--enable-dark-bg";
-  const activeHighlightClass = "kinopoisk-dualsubs--enable-highlight-primary-cue";
+  const activeHighlightClass =
+    "kinopoisk-dualsubs--enable-highlight-primary-cue";
   const activeExtensionClass = "kinopoisk-dualsubs--enabled";
 
-  let cachedSubtiles:Record<string, string> = {};
-  let pageUrl:string = document.location.href;
+  let cachedSubtiles: Record<string, string> = {};
+  let pageUrl: string = document.location.href;
   let originalCuesPositionBottom = 0;
-  let currentCogOpened:CogType|null = null;
-  
-  let contentInfo:PlayerContentInformation = {
+  let contentInfo: PlayerContentInformation = {
     season: 0,
     episode: 0,
     filmId: "",
-  }
-  
-  let watchParams:PlayerWatchParams = {
-    subtitleLanguage: ""
   };
 
-  let renderingSubtitles:PlayerSubtitles;
+  let watchParams: PlayerWatchParams = {
+    subtitleLanguage: "",
+  };
 
-  let checkPageUrlChangeInterval:NodeJS.Timeout;
-  let checkVideoExistingInterval:NodeJS.Timeout;
-  let checkVideoCuesInterval:NodeJS.Timeout;
-  let checkOriginalSubtitlesYPositionInterval:NodeJS.Timeout;
+  let renderingSubtitles: PlayerSubtitles;
 
-  let parsedCues:Cue[] = [];
-  let enabled:boolean = false;
-  let currentAltCues:string[] = [];
-  let currentCueIndex:null|number = null;
+  let checkPageUrlChangeInterval: NodeJS.Timeout;
+  let checkVideoExistingInterval: NodeJS.Timeout;
+  let checkVideoCuesInterval: NodeJS.Timeout;
+  let checkingOriginalSubtitlesYPosition = false;
+  let watchingLocalStorage = false;
+
+  let parsedCues: Cue[] = [];
+  let enabled: boolean = false;
+  let currentAltCues: string[] = [];
+  let currentCueIndex: null | number = null;
   let currentPrimaryCueText = "";
-  let videoPaused:boolean = false;
-  let lsSubtitlesRatio = +localStorage.getItem("subtitlesRatio")
-  let subtitlesSizeRatio:number = (isNaN(lsSubtitlesRatio) ? 1 : lsSubtitlesRatio) || 1;
-  let windowCuesElement:HTMLElement|null = null;
+  let videoPaused: boolean = false;
+  let subtitlesSizeRatio: number = 1;
+  let windowCuesElement: HTMLElement | null = null;
 
-  const getContentInformation = ():PlayerContentInformation => {
-    let currentLocation = document.location.pathname.split('/');
+  const getContentInformation = (): PlayerContentInformation => {
+    let currentLocation = document.location.pathname.split("/");
     let params = new URLSearchParams(document.location.search);
     let episodeNumber = +params.get("episode");
     let seasonNumber = +params.get("season");
@@ -68,109 +74,108 @@
       episode: isNaN(episodeNumber) ? 0 : episodeNumber,
       season: isNaN(seasonNumber) ? 0 : seasonNumber,
       filmId: params.get("rt") || currentLocation[2] || "",
-    }
-  }
+    };
+  };
 
   const updateWatchParams = async () => {
     console.log("Getting watch params by film", contentInfo.filmId);
     watchParams = await getWatchParams(contentInfo.filmId);
-    console.log("Loaded watch params", watchParams)
-  }
+    console.log("Loaded watch params", watchParams);
+  };
 
   const loadContentSubtitles = async () => {
     console.log("Loading subtitles", contentInfo.filmId);
     let metadata = await getContentMetadata(contentInfo.filmId);
     let contentId = contentInfo.filmId;
 
-    if (metadata.contentType === "tv-series" && (contentInfo.season && contentInfo.episode)) {
+    if (
+      metadata.contentType === "tv-series" &&
+      contentInfo.season &&
+      contentInfo.episode
+    ) {
       let tv = await getContentChildren(contentId);
-      console.log("Loaded tv", tv.seasons)
-      let episode = tv.seasons[contentInfo.season - 1].episodes.find(ep => ep.number === contentInfo.episode);
-      contentId = contentId ? episode.filmId as string : "";
+      console.log("Loaded tv", tv.seasons);
+      let episode = tv.seasons[contentInfo.season - 1].episodes.find(
+        (ep) => ep.number === contentInfo.episode
+      );
+      contentId = contentId ? (episode.filmId as string) : "";
     }
-    
+
     if (!contentId) return;
-    
+
     let streamsMetadata = await getContentStreamsMetadata(contentId);
-    console.log("MD loaded", streamsMetadata, contentId, getContentInformation());
 
     if (watchParams.subtitleLanguage.startsWith("sid")) {
-      let index = parseInt(watchParams.subtitleLanguage.replace("sid", ""))
+      let index = parseInt(watchParams.subtitleLanguage.replace("sid", ""));
       if (streamsMetadata.streams[0].subtitles[index]) {
-        watchParams.subtitleLanguage = streamsMetadata.streams[0].subtitles[index].language
+        watchParams.subtitleLanguage =
+          streamsMetadata.streams[0].subtitles[index].language;
       }
     }
 
     let subs = streamsMetadata.streams[0].subtitles.find((sub) => {
-      return (sub.language === LANGAUGES.RUS || sub.language === LANGAUGES.RUSX18) && watchParams.subtitleLanguage === LANGAUGES.ENG || sub.language === LANGAUGES.ENG && (watchParams.subtitleLanguage === LANGAUGES.RUS || watchParams.subtitleLanguage === LANGAUGES.RUSX18);
+      return (
+        ((sub.language === LANGAUGES.RUS ||
+          sub.language === LANGAUGES.RUSX18) &&
+          watchParams.subtitleLanguage === LANGAUGES.ENG) ||
+        (sub.language === LANGAUGES.ENG &&
+          (watchParams.subtitleLanguage === LANGAUGES.RUS ||
+            watchParams.subtitleLanguage === LANGAUGES.RUSX18))
+      );
     });
 
     if (subs) {
       renderingSubtitles = subs;
     }
-  }
+  };
 
-  const handleDomChangeLanguage = (e:MouseEvent) => {
+  const handleDomChangeLanguage = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
-    if (el && el.getAttribute("class") && el.getAttribute("class").includes("styles_subtitles-size-button")) {
-      currentCogOpened = CogType.SubtitlesSize;
-      return
-    }
     if (el && el.getAttribute("type") === "radio") {
-      let val = el.getAttribute("value")
-
-      console.log("Click radio element", el.parentNode, el.parentElement, val)
-      if (Object.values(CogType).includes(val as CogType)) {
-        // Пользователь нажал на одну из опций в шестеренке
-        currentCogOpened = val as CogType;
-      } else {
+      let val = el.getAttribute("value");
+      if (!Object.values(CogType).includes(val as CogType)) {
         // Если мы сейчас уже открыли какую-то шестеренку - проверяем значение
         const isAudioIdRadio = val.includes("aid");
-        const isSubtitlesIdRadio = val.includes("sid") || val.includes("subtitles");
+        const isSubtitlesIdRadio =
+          val.includes("sid") || val.includes("subtitles");
 
         if (isSubtitlesIdRadio || isAudioIdRadio) {
-          
           if (isSubtitlesIdRadio) {
             if (val.includes("sid")) {
-              watchParams.subtitleLanguage = val
+              watchParams.subtitleLanguage = val;
             } else {
-              watchParams.subtitleLanguage = el.getAttribute("value").split("/")[1]
+              watchParams.subtitleLanguage = el
+                .getAttribute("value")
+                .split("/")[1];
             }
           } else if (val == "") {
             watchParams.subtitleLanguage = "";
             clearSubtitles();
           }
 
-          return
-        }
-
-        if (currentCogOpened) {
-          console.log("Current opened cog", currentCogOpened);
-          if (currentCogOpened == CogType.SubtitlesSize) {
-            subtitlesSizeRatio = +val;
-          }
+          return;
         }
       }
     }
-  }
+  };
 
-  const loadSubtitles = async (path:string) => {
+  const loadSubtitles = async (path: string) => {
     if (cachedSubtiles[path]) return cachedSubtiles[path];
     let body = await fetch(path, {
-      credentials: "include"
-    })
+      credentials: "include",
+    });
     let subs = await body.text();
     cachedSubtiles[path] = subs;
     return subs;
-  }
+  };
 
   const updateSubtitles = async () => {
     let subs = await loadSubtitles(renderingSubtitles.url);
     if (!subs) return;
     parsedCues = srtParser(subs);
-  }
+  };
 
-  const changeCueHandler = (e:Event) => {
+  const changeCueHandler = (e: Event) => {
     const track = e.target as TextTrack;
     if (track.activeCues.length) {
       const activeCue = track.activeCues[0] as VTTCue;
@@ -179,48 +184,55 @@
       if (primaryCueIndex !== -1) {
         currentCueIndex = primaryCueIndex;
         currentPrimaryCueText = activeCue.text;
-        return
+        return;
       }
     }
     currentCueIndex = null;
     currentPrimaryCueText = "";
-  }
+  };
 
-  const handleChangeVideoState = (e:Event) => {
+  const handleChangeVideoState = (e: Event) => {
     const video = e.target as HTMLVideoElement;
     if (video.paused) {
       videoPaused = true;
     } else {
       videoPaused = false;
     }
-  }
+  };
 
   const handleChangeVideoTracks = () => {
     clearInterval(checkVideoCuesInterval);
-    let intervalStart = Date.now()
+    let intervalStart = Date.now();
     const checkCues = async () => {
-      if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME) clearInterval(checkVideoCuesInterval);
+      if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME)
+        clearInterval(checkVideoCuesInterval);
       let videos = document.body.getElementsByTagName("video");
-      if (videos.length && videos[0].textTracks && videos[0].textTracks.length && videos[0].textTracks[0].cues && videos[0].textTracks[0].cues.length) {
+      if (
+        videos.length &&
+        videos[0].textTracks &&
+        videos[0].textTracks.length &&
+        videos[0].textTracks[0].cues &&
+        videos[0].textTracks[0].cues.length
+      ) {
         clearInterval(checkVideoCuesInterval);
         fillAltCues();
         videos[0].textTracks[0].addEventListener("cuechange", changeCueHandler);
       } else {
-        clearSubtitles()
+        clearSubtitles();
       }
-    }
+    };
 
     checkVideoCuesInterval = setInterval(() => {
-      checkCues()
+      checkCues();
     }, CHECK_INTERVAL_TIME);
-    checkCues()
-  }
+    checkCues();
+  };
 
   const clearSubtitles = () => {
     currentPrimaryCueText = "";
     currentCueIndex = null;
     currentAltCues = [];
-  }
+  };
 
   const fillAltCues = () => {
     currentAltCues = [];
@@ -230,14 +242,14 @@
     for (let i = 0; i < cues.length; i++) {
       let maxCommonArea = 0;
       let maxCommonAreaJ = -1;
-      
+
       for (let j = 0; j < parsedCues.length; j++) {
-        let parsedCue = parsedCues[j]
+        let parsedCue = parsedCues[j];
         let cue = cues[i];
-        
-        let rightSide = Math.min(parsedCue.endTime/1000, cue.endTime);
-        let leftSide = Math.max(parsedCue.startTime/1000, cue.startTime);
-        
+
+        let rightSide = Math.min(parsedCue.endTime / 1000, cue.endTime);
+        let leftSide = Math.max(parsedCue.startTime / 1000, cue.startTime);
+
         let commonArea = rightSide - leftSide;
         if (commonArea >= 0) {
           if (maxCommonArea < commonArea) {
@@ -245,25 +257,27 @@
             maxCommonAreaJ = j;
           }
           if (maxCommonAreaJ != -1 && maxCommonArea > commonArea) {
-            break
-          } 
+            break;
+          }
         }
       }
 
       if (maxCommonAreaJ != -1) {
-        currentAltCues.push(parsedCues[maxCommonAreaJ].text.replace(/\n/g, " "));
+        currentAltCues.push(
+          parsedCues[maxCommonAreaJ].text.replace(/\n/g, " ")
+        );
       } else {
         currentAltCues.push("");
       }
     }
-  }
+  };
 
   const clearCurrentCues = () => {
-    renderingSubtitles=null;
+    renderingSubtitles = null;
     parsedCues = [];
-  }
+  };
 
-  const stepReplica = (i:number) => {
+  const stepReplica = (i: number) => {
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
     if (!video || !video.textTracks.length || !video.textTracks[0].cues) return;
@@ -276,18 +290,18 @@
         if (activeCuesIndex != -1) {
           let newReplicaIndex = activeCuesIndex + i;
           if (newReplicaIndex >= cues.length) {
-            newReplicaIndex = cues.length
+            newReplicaIndex = cues.length;
           } else if (newReplicaIndex < 0) {
             newReplicaIndex = 0;
           }
-          video.currentTime = cues[newReplicaIndex].startTime
-          return
+          video.currentTime = cues[newReplicaIndex].startTime;
+          return;
         }
       } else {
         let currentTime = video.currentTime;
-        let newCue:TextTrackCue|null = null;
+        let newCue: TextTrackCue | null = null;
         if (i > 0) {
-          newCue = cues.find(el => el.startTime > currentTime);
+          newCue = cues.find((el) => el.startTime > currentTime);
         } else {
           for (let i = 0; i < cues.length; i++) {
             let cue = cues[i];
@@ -303,34 +317,47 @@
         }
       }
     }
-  }
+  };
 
   const stopIntervals = () => {
     clearInterval(checkPageUrlChangeInterval);
     clearInterval(checkVideoCuesInterval);
     clearInterval(checkVideoExistingInterval);
-    clearInterval(checkOriginalSubtitlesYPositionInterval);
-  }
+  };
 
   // Check toggle
   $: enabled = $settings.doublesubs_enabled;
   $: {
     if (enabled) {
       clearInterval(checkPageUrlChangeInterval);
-      clearInterval(checkOriginalSubtitlesYPositionInterval);
-      
-      checkOriginalSubtitlesYPositionInterval = setInterval(() => {
-        const elem = document.querySelector(`[class*="Subtitles_root"]`)
-        if (elem) {
-          const originalCuesRect = elem.getBoundingClientRect();
-          const windowCuesElementRect:DOMRect|null = windowCuesElement ? windowCuesElement.getBoundingClientRect() : null;
-          let heightOffset = originalCuesRect.height;
-          if (originalCuesRect.y < (window.innerHeight / 2)) {
-            heightOffset = Math.max(originalCuesRect.height, windowCuesElementRect ? windowCuesElementRect.height : null);
+
+      if (!checkingOriginalSubtitlesYPosition) {
+        checkingOriginalSubtitlesYPosition = true;
+        const moveOriginalQuesByY = () => {
+          const elem = document.querySelector(`[class*="Subtitles_root"]`);
+          if (elem) {
+            const originalCuesRect = elem.getBoundingClientRect();
+            const windowCuesElementRect: DOMRect | null = windowCuesElement
+              ? windowCuesElement.getBoundingClientRect()
+              : null;
+            let heightOffset = originalCuesRect.height;
+            if (originalCuesRect.y < window.innerHeight / 2) {
+              heightOffset = Math.max(
+                originalCuesRect.height,
+                windowCuesElementRect ? windowCuesElementRect.height : null
+              );
+            }
+            originalCuesPositionBottom =
+              window.innerHeight - (originalCuesRect.y + heightOffset);
           }
-          originalCuesPositionBottom = window.innerHeight - (originalCuesRect.y + heightOffset);
-        }
-      }, 50);
+
+          if (!checkingOriginalSubtitlesYPosition) return;
+          requestAnimationFrame(moveOriginalQuesByY);
+        };
+        requestAnimationFrame(() => {
+          moveOriginalQuesByY();
+        });
+      }
 
       checkPageUrlChangeInterval = setInterval(() => {
         if (pageUrl != document.location.href) {
@@ -355,7 +382,7 @@
   }
 
   $: console.log("Video paused", videoPaused);
-  $: console.log("Changed subtitles size ratio", subtitlesSizeRatio)
+  $: console.log("Changed subtitles size ratio", subtitlesSizeRatio);
 
   // Check page url changing (film, tv series)
   $: {
@@ -366,15 +393,17 @@
 
   // Change player content information
   $: {
-    if (contentInfo && contentInfo.filmId) { // when updates film
-      clearCurrentCues()
+    if (contentInfo && contentInfo.filmId) {
+      // when updates film
+      clearCurrentCues();
       updateWatchParams();
     }
   }
 
   // Change watch params
   $: {
-    if (watchParams && watchParams.subtitleLanguage && enabled) { // when changes subtitle language
+    if (watchParams && watchParams.subtitleLanguage && enabled) {
+      // when changes subtitle language
       loadContentSubtitles();
     } else {
       clearCurrentCues();
@@ -394,33 +423,40 @@
     if (parsedCues) {
       clearInterval(checkVideoExistingInterval);
       if (parsedCues.length) {
-        console.log("parsed cues changed", parsedCues.length)
         let intervalStart = Date.now();
         checkVideoExistingInterval = setInterval(() => {
           let videos = document.body.getElementsByTagName("video");
-          
-          if (!videos.length || !videos[0].textTracks || !videos[0].textTracks.length) {
-            if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME) clearInterval(checkVideoExistingInterval);
+
+          if (
+            !videos.length ||
+            !videos[0].textTracks ||
+            !videos[0].textTracks.length
+          ) {
+            if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME)
+              clearInterval(checkVideoExistingInterval);
             return;
           }
 
           clearInterval(checkVideoExistingInterval);
 
-          videos[0].textTracks.removeEventListener("change", handleChangeVideoTracks);
-          
+          videos[0].textTracks.removeEventListener(
+            "change",
+            handleChangeVideoTracks
+          );
+
           videos[0].removeEventListener("play", handleChangeVideoState);
           videos[0].removeEventListener("pause", handleChangeVideoState);
 
-
-          videos[0].textTracks.addEventListener("change", handleChangeVideoTracks);
+          videos[0].textTracks.addEventListener(
+            "change",
+            handleChangeVideoTracks
+          );
 
           videos[0].addEventListener("play", handleChangeVideoState);
           videos[0].addEventListener("pause", handleChangeVideoState);
-          
-          
+
           videoPaused = videos[0].paused;
           handleChangeVideoTracks();
-
         }, CHECK_INTERVAL_TIME);
       }
     }
@@ -428,7 +464,7 @@
 
   $: {
     if ($settings.black_background_enabled) {
-      document.body.classList.add(activeBlackBgClass)
+      document.body.classList.add(activeBlackBgClass);
     } else {
       document.body.classList.remove(activeBlackBgClass);
     }
@@ -436,23 +472,46 @@
 
   $: {
     if ($settings.hightlight_primary_cue_enabled) {
-      document.body.classList.add(activeHighlightClass)
+      document.body.classList.add(activeHighlightClass);
     } else {
       document.body.classList.remove(activeHighlightClass);
     }
   }
 
+  const syncWithLocalStorage = () => {
+    let lsSubtitlesSizeRatio = +localStorage.getItem("subtitlesRatio");
+    if (
+      lsSubtitlesSizeRatio &&
+      !isNaN(lsSubtitlesSizeRatio) &&
+      lsSubtitlesSizeRatio != subtitlesSizeRatio
+    ) {
+      subtitlesSizeRatio = lsSubtitlesSizeRatio;
+    }
+    if (!watchingLocalStorage) return;
+    requestAnimationFrame(syncWithLocalStorage);
+  };
+
+  watchingLocalStorage = true;
+  syncWithLocalStorage();
   onDestroy(() => {
+    watchingLocalStorage = false;
     stopIntervals();
   });
-
 </script>
 
 <svelte:body on:click={handleDomChangeLanguage} />
-<PlayerHotKeys enabled={$settings.hotkeys_enabled} on:nextreplica={() => stepReplica(1)} on:prevreplica={() => stepReplica(-1)}/>
+<PlayerHotKeys
+  enabled={$settings.hotkeys_enabled}
+  on:nextreplica={() => stepReplica(1)}
+  on:prevreplica={() => stepReplica(-1)}
+/>
 {#if enabled}
   {#if currentCueIndex != null && originalCuesPositionBottom}
-    <div bind:this={windowCuesElement} class="extension--cues {videoPaused ? "kplayer--paused" : ""}" style="transform: translateY(-{originalCuesPositionBottom}px) scale({subtitlesSizeRatio});">
+    <div
+      bind:this={windowCuesElement}
+      class="extension--cues {videoPaused ? 'kplayer--paused' : ''}"
+      style="transform: translateY(-{originalCuesPositionBottom}px) scale({subtitlesSizeRatio});"
+    >
       <div class="extension--cues-window">
         {#if currentPrimaryCueText}
           <div class="extension--cue-line extension--primary-cue">
@@ -470,18 +529,34 @@
 {/if}
 
 <style>
-  :global(.kinopoisk-dualsubs--enabled [class*="Subtitles_root"] [class*="Subtitles_text"]),
-  :global(.kinopoisk-dualsubs--enabled [class*="Subtitles_root"] [class*="Subtitles_new-text"]) {
+  :global(
+      .kinopoisk-dualsubs--enabled
+        [class*="Subtitles_root"]
+        [class*="Subtitles_text"]
+    ),
+  :global(
+      .kinopoisk-dualsubs--enabled
+        [class*="Subtitles_root"]
+        [class*="Subtitles_new-text"]
+    ) {
     @apply opacity-0;
   }
 
-  :global(.kinopoisk-dualsubs--enabled [class*="PlayerSkin_layout"] [class*="Layout_bottom"]),
-  :global(.kinopoisk-dualsubs--enabled [class*="PlayerSkin_layout"] [class*="ContextMenu_root"]) {
+  :global(
+      .kinopoisk-dualsubs--enabled
+        [class*="PlayerSkin_layout"]
+        [class*="Layout_bottom"]
+    ),
+  :global(
+      .kinopoisk-dualsubs--enabled
+        [class*="PlayerSkin_layout"]
+        [class*="ContextMenu_root"]
+    ) {
     @apply z-2;
   }
 
   :global(.extension--cues) {
-    @apply fixed flex flex-col px-4 text-shadow-xl shadow-black select-none duration-100 transition-transform transform-gpu pointer-events-none w-full bottom-0 text-white text-4xl justify-center items-center;
+    @apply fixed flex flex-col px-4 text-shadow-xl shadow-black select-none pointer-events-none w-full bottom-0 text-white text-4xl justify-center items-center;
   }
 
   :global(.extension--cues-window) {
@@ -508,8 +583,9 @@
     @apply text-5xl font-semibold;
   }
 
-  :global(.kinopoisk-dualsubs--enable-highlight-primary-cue
-      .extension--primary-cue) {
+  :global(
+      .kinopoisk-dualsubs--enable-highlight-primary-cue .extension--primary-cue
+    ) {
     @apply !text-yellow-300;
   }
 </style>
