@@ -183,9 +183,10 @@
       const primaryCueIndex = Array.from(track.cues).indexOf(activeCue);
       if (primaryCueIndex !== -1) {
         currentCueIndex = primaryCueIndex;
-        currentPrimaryCueText = activeCue.text;
         return;
       }
+      currentCueIndex = null;
+      return;
     }
     currentCueIndex = null;
     currentPrimaryCueText = "";
@@ -422,7 +423,7 @@
   $: {
     if (parsedCues) {
       clearInterval(checkVideoExistingInterval);
-      if (parsedCues.length) {
+      if (parsedCues.length || true) {
         let intervalStart = Date.now();
         checkVideoExistingInterval = setInterval(() => {
           let videos = document.body.getElementsByTagName("video");
@@ -506,7 +507,7 @@
   on:prevreplica={() => stepReplica(-1)}
 />
 {#if enabled}
-  {#if currentCueIndex != null && originalCuesPositionBottom}
+  {#if originalCuesPositionBottom}
     <div
       bind:this={windowCuesElement}
       class="extension--cues {videoPaused ? 'kplayer--paused' : ''}"
@@ -514,11 +515,15 @@
     >
       <div class="extension--cues-window">
         {#if currentPrimaryCueText}
-          <div class="extension--cue-line extension--primary-cue">
+          <div
+            class="extension--cue-line extension--primary-cue {parsedCues.length
+              ? ''
+              : 'no-highlight'}"
+          >
             {@html currentPrimaryCueText.replaceAll("\n", "<br/>")}
           </div>
         {/if}
-        {#if currentAltCues[currentCueIndex]}
+        {#if currentCueIndex != null && currentAltCues[currentCueIndex]}
           <div class="extension--cue-line extension--alternative-cue">
             {@html currentAltCues[currentCueIndex]}
           </div>
@@ -587,5 +592,9 @@
       .kinopoisk-dualsubs--enable-highlight-primary-cue .extension--primary-cue
     ) {
     @apply !text-yellow-300;
+  }
+
+  :global(.extension--primary-cue.no-highlight) {
+    @apply !text-white font-normal;
   }
 </style>
