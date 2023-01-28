@@ -61,7 +61,7 @@
   let currentAltCues: string[] = [];
   let currentCueIndex: null | number = null;
   let currentPrimaryCueText = "";
-  let videoPaused: boolean = false;
+  export let videoPaused: boolean = false;
   let subtitlesSizeRatio: number = 1;
   let windowCuesElement: HTMLElement | null = null;
 
@@ -87,11 +87,10 @@
     console.log("Loading subtitles", contentInfo.filmId);
     let metadata = await getContentMetadata(contentInfo.filmId);
     let contentId = contentInfo.filmId;
-
     if (
       metadata.contentType === "tv-series" &&
       contentInfo.season &&
-      contentInfo.episode
+      contentInfo.episode >= 0
     ) {
       let tv = await getContentChildren(contentId);
       console.log("Loaded tv", tv.seasons);
@@ -104,7 +103,6 @@
     if (!contentId) return;
 
     let streamsMetadata = await getContentStreamsMetadata(contentId);
-
     if (watchParams.subtitleLanguage.startsWith("sid")) {
       let index = parseInt(watchParams.subtitleLanguage.replace("sid", ""));
       if (streamsMetadata.streams[0].subtitles[index]) {
@@ -240,6 +238,7 @@
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
     let cues = Array.from(video.textTracks[0].cues);
+    if (!parsedCues.length) {return}
     for (let i = 0; i < cues.length; i++) {
       let maxCommonArea = 0;
       let maxCommonAreaJ = -1;
@@ -331,7 +330,6 @@
   $: {
     if (enabled) {
       clearInterval(checkPageUrlChangeInterval);
-
       if (!checkingOriginalSubtitlesYPosition) {
         checkingOriginalSubtitlesYPosition = true;
         const moveOriginalQuesByY = () => {
@@ -382,8 +380,6 @@
     }
   }
 
-  $: console.log("Video paused", videoPaused);
-  $: console.log("Changed subtitles size ratio", subtitlesSizeRatio);
 
   // Check page url changing (film, tv series)
   $: {
@@ -414,7 +410,6 @@
   // Change active subtitles
   $: {
     if (renderingSubtitles) {
-      // originalCues=[];
       updateSubtitles();
     }
   }
@@ -505,6 +500,9 @@
   enabled={$settings.hotkeys_enabled}
   on:nextreplica={() => stepReplica(1)}
   on:prevreplica={() => stepReplica(-1)}
+  on:toggledualsubs={() => {
+    $settings.doublesubs_enabled = !$settings.doublesubs_enabled;
+  }}
 />
 {#if enabled}
   {#if originalCuesPositionBottom}
@@ -516,7 +514,7 @@
       <div class="extension--cues-window">
         {#if currentPrimaryCueText}
           <div
-            class="extension--cue-line extension--primary-cue {parsedCues.length
+            class="extension--cue-line extension--primary-cue {currentAltCues.length
               ? ''
               : 'no-highlight'}"
           >
@@ -534,29 +532,21 @@
 {/if}
 
 <style>
-  :global(
-      .kinopoisk-dualsubs--enabled
-        [class*="Subtitles_root"]
-        [class*="Subtitles_text"]
-    ),
-  :global(
-      .kinopoisk-dualsubs--enabled
-        [class*="Subtitles_root"]
-        [class*="Subtitles_new-text"]
-    ) {
+  :global(.kinopoisk-dualsubs--enabled
+      [class*="Subtitles_root"]
+      [class*="Subtitles_text"]),
+  :global(.kinopoisk-dualsubs--enabled
+      [class*="Subtitles_root"]
+      [class*="Subtitles_new-text"]) {
     @apply opacity-0;
   }
 
-  :global(
-      .kinopoisk-dualsubs--enabled
-        [class*="PlayerSkin_layout"]
-        [class*="Layout_bottom"]
-    ),
-  :global(
-      .kinopoisk-dualsubs--enabled
-        [class*="PlayerSkin_layout"]
-        [class*="ContextMenu_root"]
-    ) {
+  :global(.kinopoisk-dualsubs--enabled
+      [class*="PlayerSkin_layout"]
+      [class*="Layout_bottom"]),
+  :global(.kinopoisk-dualsubs--enabled
+      [class*="PlayerSkin_layout"]
+      [class*="ContextMenu_root"]) {
     @apply z-2;
   }
 
@@ -588,9 +578,8 @@
     @apply text-5xl font-semibold;
   }
 
-  :global(
-      .kinopoisk-dualsubs--enable-highlight-primary-cue .extension--primary-cue
-    ) {
+  :global(.kinopoisk-dualsubs--enable-highlight-primary-cue
+      .extension--primary-cue) {
     @apply !text-yellow-300;
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "Двойные субтитры Кинопоиск HD",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "manifest_version": 3,
   "action": {
     "default_icon": {
@@ -17,14 +17,21 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://hd.kinopoisk.ru/", "*://hd.kinopoisk.ru/*"],
-      "js": ["content-scripts/main.ts"]
+      "matches": [
+        "*://hd.kinopoisk.ru/",
+        "*://hd.kinopoisk.ru/*"
+      ],
+      "js": [
+        "content-scripts/main.ts"
+      ]
     }
   ],
   "background": {
     "service_worker": "./background/sw.ts",
     "type": "module"
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "homepage_url": "https://github.com/ciricc/kinopoisk-dualsubs#readme"
 }

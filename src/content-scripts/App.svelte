@@ -20,6 +20,7 @@
 
   let videoPlayerElement: HTMLElement;
   let showedControls = false;
+  let videoPaused: boolean;
 
   const setVisible = async (newVal: boolean) => {
     if (newVal) {
@@ -39,11 +40,15 @@
     }
   };
 
-  const setVisibleFullScreenController = async (newVal: boolean) => {
+  const setVisibleFullScreenController = async (
+    newVal: boolean,
+    autoHide = true
+  ) => {
     if (newVal) {
       visibleFullScreenController = newVal;
       await tick();
       slideDownFullScreenController = true;
+      if (!autoHide) return clearTimeout(hideFullScreenControllerTimeout);
       createNonActiveTimeoutHideFullScreenController();
     } else {
       slideDownFullScreenController = false;
@@ -76,7 +81,7 @@
 
     hideFullScreenControllerTimeout = setTimeout(() => {
       setVisibleFullScreenController(false);
-    }, 5000);
+    }, 2500);
   };
 
   const hide = () => {
@@ -96,6 +101,16 @@
       setVisibleFullScreenController(true);
     }
   };
+
+  $: {
+    if (isOpenedVideoPlayer) {
+      if (videoPaused) {
+        setVisibleFullScreenController(true, false);
+      } else {
+        setVisibleFullScreenController(true);
+      }
+    }
+  }
 
   $: {
     if (appContainer && isOpenedVideoPlayer() && visibleFullScreenController) {
@@ -146,7 +161,7 @@
 
 <div bind:this={appContainer} class="dark">
   {#if $settings && videoPlayerElement}
-    <KinopoiskDualsubs />
+    <KinopoiskDualsubs bind:videoPaused />
   {/if}
   {#if $settings}
     {#if !visible && videoPlayerElement}
@@ -221,6 +236,11 @@
                 <div class="flex space-x-4 items-center py-2">
                   <HotKey>Ctrl</HotKey><span>+</span><HotKey>&gt;</HotKey><span
                     class="pl-4 flex-1">Следующая реплика</span
+                  >
+                </div>
+                <div class="flex space-x-4 items-center py-2">
+                  <HotKey>Shift</HotKey><span>+</span><HotKey>S</HotKey><span
+                    class="pl-4 flex-1">Вкл/Выкл расширение</span
                   >
                 </div>
               </div>

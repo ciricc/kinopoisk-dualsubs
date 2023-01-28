@@ -3,47 +3,54 @@
     import MouseTrap from "mousetrap";
 
     export let enabled = true;
-    export let nextReplicaHotKeys = "ctrl+.";
-    export let prevReplicaHotKeys = "ctrl+,";
- 
-    console.log("Next replica hotkey", nextReplicaHotKeys);
-    console.log("Prev replica hotkey", prevReplicaHotKeys);
+    export let hotKeys: {
+        keys: string;
+        event: string;
+    }[] = [
+        {
+            keys: "ctrl+.",
+            event: "nextreplica"
+        },
+        {
+            keys: "ctrl+,",
+            event: "prevreplica"
+        },
+        {
+            keys: "shift+s",
+            event: "toggledualsubs"
+        }
+    ];
 
     const dispatch = createEventDispatcher();
 
     const bindKeys = () => {
-        MouseTrap.bind(nextReplicaHotKeys, function(e) {
-            e.preventDefault();
-            dispatch("nextreplica");
+        hotKeys.forEach(item => {
+            MouseTrap.bind(item.keys, function(e) {
+                e.preventDefault();
+                dispatch(item.event);
+            });
         });
-
-        MouseTrap.bind(prevReplicaHotKeys, function(e) {
-            e.preventDefault();
-            dispatch("prevreplica");
-        });
-    }
+    };
 
     const unbindKeys = () => {
-        MouseTrap.unbind(nextReplicaHotKeys);
-        MouseTrap.unbind(prevReplicaHotKeys);
-    }
+        hotKeys.forEach(item => MouseTrap.unbind(item.keys));
+    };
 
     $: {
         if (enabled) {
-            bindKeys()
+            bindKeys();
         } else {
-            unbindKeys()
+            unbindKeys();
         }
     }
 
     onMount(() => {
         if (enabled) {
-            bindKeys()
+            bindKeys();
         }
     });
-    
+
     onDestroy(() => {
         unbindKeys();
     });
-
 </script>
