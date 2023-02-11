@@ -93,7 +93,6 @@
       contentInfo.episode >= 0
     ) {
       let tv = await getContentChildren(contentId);
-      console.log("Loaded tv", tv.seasons);
       let episode = tv.seasons[contentInfo.season - 1].episodes.find(
         (ep) => ep.number === contentInfo.episode
       );
@@ -175,13 +174,11 @@
 
   const changeCueHandler = (e: Event) => {
     const track = e.target as TextTrack;
-    console.log("Track change", track)
     if (track.activeCues.length) {
       if (!currentAltCues.length && parsedCues.length) fillAltCues();
       const activeCue = track.activeCues[0] as VTTCue;
       currentPrimaryCueText = activeCue.text;
       const primaryCueIndex = Array.from(track.cues).indexOf(activeCue);
-      console.log("Active cue", activeCue, primaryCueIndex)
       if (primaryCueIndex !== -1) {
         currentCueIndex = primaryCueIndex;
         return;
@@ -205,25 +202,20 @@
   const findActiveVideoTextTrack = (videoElem:HTMLVideoElement):TextTrack|null => {
     if (!videoElem) return null
     if (!videoElem.textTracks.length) return null;
-    // console.log(Array.from(videoElem.textTracks))
-    const textTrack = Array.from(videoElem.textTracks).find(el => el.language == watchParams.subtitleLanguage)
-    console.log("Watch params", watchParams, "text track found", textTrack, Array.from(videoElem.textTracks))
+    const textTrack = Array.from(videoElem.textTracks).find(el => el.language == watchParams.subtitleLanguage && el.mode != "disabled")
     return textTrack || null;
   }
 
   const handleChangeVideoTracks = () => {
-    console.log("Handl change video tracks")
     clearInterval(checkVideoCuesInterval);
     let intervalStart = Date.now();
     const checkCues = async () => {
       if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME)
         clearInterval(checkVideoCuesInterval);
       let videos = document.body.getElementsByTagName("video");
-      console.log("Found text track", findActiveVideoTextTrack(videos[0]))
       if (findActiveVideoTextTrack(videos[0])) {
         clearInterval(checkVideoCuesInterval);
         fillAltCues();
-        console.log("video add listener")
         findActiveVideoTextTrack(videos[0]).addEventListener("cuechange", changeCueHandler);
       } else {
         clearSubtitles();
@@ -248,8 +240,8 @@
     let video = videos[0];
     // video.style.display = "hidden"
     const videoTextTrack = findActiveVideoTextTrack(video)
+    if (!videoTextTrack || !videoTextTrack.cues) return;
     let cues = Array.from(videoTextTrack.cues);
-    console.log("Parsed cues", parsedCues, videoTextTrack, cues.length)
     if (!parsedCues.length) {return}
     for (let i = 0; i < cues.length; i++) {
       let maxCommonArea = 0;
@@ -478,14 +470,6 @@
     }
   }
   
-  $: {
-    // console.log("Enabled", enabled)
-    // console.log("Subtitles pos", originalCuesPositionBottom)
-    // console.log("Current primary cue text", currentPrimaryCueText)
-    // console.log("Loaded alt subtitles", currentAltCues)
-    // console.log("Currennt alt cue index", currentCueIndex)  
-  }
-
   $: {
     if ($settings.hightlight_primary_cue_enabled) {
       document.body.classList.add(activeHighlightClass);

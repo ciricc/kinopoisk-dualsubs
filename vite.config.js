@@ -11,7 +11,7 @@ export default defineConfig({
     rollupOptions: {
       input: "src/manifest.json",
     },
-    minify: true,
+    minify: false,
   },
   plugins: [
     svelte({
