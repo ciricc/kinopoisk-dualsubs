@@ -238,7 +238,6 @@
     currentAltCues = [];
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
-    // video.style.display = "hidden"
     const videoTextTrack = findActiveVideoTextTrack(video)
     if (!videoTextTrack || !videoTextTrack.cues) return;
     let cues = Array.from(videoTextTrack.cues);
