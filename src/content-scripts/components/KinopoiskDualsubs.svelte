@@ -175,10 +175,13 @@
 
   const changeCueHandler = (e: Event) => {
     const track = e.target as TextTrack;
+    console.log("Track change", track)
     if (track.activeCues.length) {
+      if (!currentAltCues.length && parsedCues.length) fillAltCues();
       const activeCue = track.activeCues[0] as VTTCue;
       currentPrimaryCueText = activeCue.text;
       const primaryCueIndex = Array.from(track.cues).indexOf(activeCue);
+      console.log("Active cue", activeCue, primaryCueIndex)
       if (primaryCueIndex !== -1) {
         currentCueIndex = primaryCueIndex;
         return;
@@ -199,23 +202,29 @@
     }
   };
 
+  const findActiveVideoTextTrack = (videoElem:HTMLVideoElement):TextTrack|null => {
+    if (!videoElem) return null
+    if (!videoElem.textTracks.length) return null;
+    // console.log(Array.from(videoElem.textTracks))
+    const textTrack = Array.from(videoElem.textTracks).find(el => el.language == watchParams.subtitleLanguage)
+    console.log("Watch params", watchParams, "text track found", textTrack, Array.from(videoElem.textTracks))
+    return textTrack || null;
+  }
+
   const handleChangeVideoTracks = () => {
+    console.log("Handl change video tracks")
     clearInterval(checkVideoCuesInterval);
     let intervalStart = Date.now();
     const checkCues = async () => {
       if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME)
         clearInterval(checkVideoCuesInterval);
       let videos = document.body.getElementsByTagName("video");
-      if (
-        videos.length &&
-        videos[0].textTracks &&
-        videos[0].textTracks.length &&
-        videos[0].textTracks[0].cues &&
-        videos[0].textTracks[0].cues.length
-      ) {
+      console.log("Found text track", findActiveVideoTextTrack(videos[0]))
+      if (findActiveVideoTextTrack(videos[0])) {
         clearInterval(checkVideoCuesInterval);
         fillAltCues();
-        videos[0].textTracks[0].addEventListener("cuechange", changeCueHandler);
+        console.log("video add listener")
+        findActiveVideoTextTrack(videos[0]).addEventListener("cuechange", changeCueHandler);
       } else {
         clearSubtitles();
       }
@@ -237,7 +246,10 @@
     currentAltCues = [];
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
-    let cues = Array.from(video.textTracks[0].cues);
+    // video.style.display = "hidden"
+    const videoTextTrack = findActiveVideoTextTrack(video)
+    let cues = Array.from(videoTextTrack.cues);
+    console.log("Parsed cues", parsedCues, videoTextTrack, cues.length)
     if (!parsedCues.length) {return}
     for (let i = 0; i < cues.length; i++) {
       let maxCommonArea = 0;
@@ -280,10 +292,10 @@
   const stepReplica = (i: number) => {
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
-    if (!video || !video.textTracks.length || !video.textTracks[0].cues) return;
-    let cues = Array.from(video.textTracks[0].cues);
+    if (!video || !video.textTracks.length || !findActiveVideoTextTrack(video).cues) return;
+    let cues = Array.from(findActiveVideoTextTrack(video).cues);
     if (cues.length) {
-      let activeCues = video.textTracks[0].activeCues;
+      let activeCues = findActiveVideoTextTrack(video).activeCues;
       if (activeCues.length) {
         let activeCue = activeCues[0];
         let activeCuesIndex = cues.indexOf(activeCue);
@@ -464,6 +476,14 @@
     } else {
       document.body.classList.remove(activeBlackBgClass);
     }
+  }
+  
+  $: {
+    // console.log("Enabled", enabled)
+    // console.log("Subtitles pos", originalCuesPositionBottom)
+    // console.log("Current primary cue text", currentPrimaryCueText)
+    // console.log("Loaded alt subtitles", currentAltCues)
+    // console.log("Currennt alt cue index", currentCueIndex)  
   }
 
   $: {
