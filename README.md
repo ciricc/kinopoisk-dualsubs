@@ -4,7 +4,7 @@
 
 Расширение не является официальным. Работоспособность на всех устройствах не гарантирована. Это экспериментальный проект, "на коленках".
 
-<img src="https://sun9-7.userapi.com/impg/ebDtHZx0kD6oLfuKNbvfTAb-Xa9y6uayjv_zrQ/3OLxF9I9K4w.jpg?size=1848x960&quality=96&sign=35c8c648a8262f9634d631bc278c7049&type=album" alt="Демо">
+<img src="https://sun9-26.userapi.com/impg/FFQRpEHWQeMJUsme3lkRSbDsLb5D40obxw7neg/_5T9yYaI_6M.jpg?size=1920x920&quality=96&sign=444f497acbf72338293ede88b80ca7fe&type=album" alt="Демо">
 
 Поддерживаемые браузеры:
 
