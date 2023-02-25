@@ -20,7 +20,8 @@
 			"extensions": [
 				"dbaeumer.vscode-eslint",
 				"svelte.svelte-vscode",
-				"voorjaar.windicss-intellisense"
+				"voorjaar.windicss-intellisense",
+				"vivaxy.vscode-conventional-commits"
 			]
 		}
 	},

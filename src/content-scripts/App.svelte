@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount, tick } from "svelte";
-  import { sleep } from "../functions";
+  import { isMac, sleep } from "../functions";
   import KinopoiskDualsubs from "./components/KinopoiskDualsubs.svelte";
   import Thumbler from "./components/Thumbler.svelte";
 
@@ -155,6 +155,8 @@
   onDestroy(() => {
     clearInterval(checkVideoPlayerOpenedInterval);
   });
+
+  const CtrlKey = !isMac() ? "Ctrl" : "⌘";
 </script>
 
 <svelte:window on:mousemove={mouseMoveHandle} />
@@ -229,14 +231,12 @@
             {#if $settings && $settings.hotkeys_enabled && $settings.show_hotkeys_onboarding}
               <div class="px-6 text-2xl pt-6 pb-2 dark:text-true-gray-200">
                 <div class="flex space-x-4 items-center py-2">
-                  <HotKey>Ctrl</HotKey><span>+</span><HotKey>&lt;</HotKey><span
-                    class="pl-4 flex-1">Предыдущая реплика</span
-                  >
+                  <HotKey>{CtrlKey}</HotKey><span>+</span><HotKey>&lt;</HotKey
+                  ><span class="pl-4 flex-1">Предыдущая реплика</span>
                 </div>
                 <div class="flex space-x-4 items-center py-2">
-                  <HotKey>Ctrl</HotKey><span>+</span><HotKey>&gt;</HotKey><span
-                    class="pl-4 flex-1">Следующая реплика</span
-                  >
+                  <HotKey>{CtrlKey}</HotKey><span>+</span><HotKey>&gt;</HotKey
+                  ><span class="pl-4 flex-1">Следующая реплика</span>
                 </div>
                 <div class="flex space-x-4 items-center py-2">
                   <HotKey>Shift</HotKey><span>+</span><HotKey>S</HotKey><span
