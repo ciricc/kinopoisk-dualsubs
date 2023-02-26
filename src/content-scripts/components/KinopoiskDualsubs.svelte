@@ -421,7 +421,6 @@
         let intervalStart = Date.now();
         checkVideoExistingInterval = setInterval(() => {
           let videos = document.body.getElementsByTagName("video");
-          console.log("Checking video exists", videos, parsedCues.length);
           if (
             !videos.length ||
             !videos[0].textTracks ||
