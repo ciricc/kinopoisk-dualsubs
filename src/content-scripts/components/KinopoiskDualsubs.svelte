@@ -492,10 +492,6 @@
     stopIntervals();
   });
 
-  // $: console.log("enabled", enabled)
-  // $: console.log("originalCuesPositionBottom", originalCuesPositionBottom);
-  // $: console.log("windowCuesElement", windowCuesElement);
-  // $: console.log("Current cue primary text", currentCueIndex, currentPrimaryCueText);
 </script>
 
 <svelte:body on:click={handleDomChangeLanguage} />
