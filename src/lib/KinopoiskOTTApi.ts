@@ -3,6 +3,7 @@ const API_ENDPOINT = "https://api.ott.kinopoisk.ru/v12/hd/";
 export const call = async (path:string) => {
   const res = await fetch(API_ENDPOINT + path, {
     credentials: "include",
+    mode: "cors",
   });
   return await res.json();
 }
