@@ -144,7 +144,7 @@
         `[class*="PlayerSkin_layout"]`
       ) as HTMLElement;
       if (!pl) {
-        pl = document.querySelector(`[class*="PlayerManager_player"]`);
+        pl = document.querySelector(`yaplayertag`);
       }
       if (videoPlayerElement !== pl) {
         videoPlayerElement = pl;
@@ -163,6 +163,12 @@
   $: {
     console.log("video player element", videoPlayerElement);
   }
+
+  window["is_dualsubsUser"] = true;
+  // var scriptElementCode = `fetch("https://api.ott.kinopoisk.ru", {})`;
+  // var scriptElement = document.createElement("script");
+  // scriptElement.textContent = scriptElementCode;
+  // document.body.appendChild(scriptElement);
   onMount(() => console.log("Mounted"));
 </script>
 

@@ -34,8 +34,7 @@
     "storage"
   ],
   "host_permissions": [
-    "*://api.ott.kinopoisk.ru/*",
-    "*://hd.kinopoisk.ru/*"
+    "*://api.ott.kinopoisk.ru/"
   ],
   "homepage_url": "https://github.com/ciricc/kinopoisk-dualsubs#readme"
 }

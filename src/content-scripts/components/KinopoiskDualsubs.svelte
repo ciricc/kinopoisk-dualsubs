@@ -1,10 +1,4 @@
 <script lang="ts">
-  import {
-    getContentChildren,
-    getContentMetadata,
-    getContentStreamsMetadata,
-    getWatchParams,
-  } from "../../lib/KinopoiskOTTApi";
   import type {
     PlayerContentInformation,
     PlayerSubtitles,
@@ -14,6 +8,7 @@
   import { settings } from "../stores/settings";
   import { Cue, srtParser } from "../../lib/srtParser";
   import PlayerHotKeys from "./PlayerHotKeys.svelte";
+  import { getContentChildren, getContentMetadata, getContentStreamsMetadata, getWatchParams } from "../../lib/scriptsConnector";
 
   const LANGAUGES = {
     RUS: "rus",
@@ -76,12 +71,14 @@
       filmId: params.get("rt") || currentLocation[2] || "",
     };
   };
+ 
 
   const updateWatchParams = async () => {
     console.log("Getting watch params by film", contentInfo.filmId);
     watchParams = await getWatchParams(contentInfo.filmId);
     console.log("Loaded watch params", watchParams);
   };
+
 
   const loadContentSubtitles = async () => {
     console.log("Loading subtitles", contentInfo.filmId);
@@ -100,7 +97,6 @@
     }
 
     if (!contentId) return;
-
     let streamsMetadata = await getContentStreamsMetadata(contentId);
     if (watchParams.subtitleLanguage.startsWith("sid")) {
       let index = parseInt(watchParams.subtitleLanguage.replace("sid", ""));
@@ -425,7 +421,7 @@
         let intervalStart = Date.now();
         checkVideoExistingInterval = setInterval(() => {
           let videos = document.body.getElementsByTagName("video");
-
+          console.log("Checking video exists", videos, parsedCues.length);
           if (
             !videos.length ||
             !videos[0].textTracks ||
@@ -496,6 +492,11 @@
     watchingLocalStorage = false;
     stopIntervals();
   });
+
+  // $: console.log("enabled", enabled)
+  // $: console.log("originalCuesPositionBottom", originalCuesPositionBottom);
+  // $: console.log("windowCuesElement", windowCuesElement);
+  // $: console.log("Current cue primary text", currentCueIndex, currentPrimaryCueText);
 </script>
 
 <svelte:body on:click={handleDomChangeLanguage} />

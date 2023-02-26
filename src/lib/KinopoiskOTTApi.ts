@@ -3,17 +3,16 @@ const API_ENDPOINT = "https://api.ott.kinopoisk.ru/v12/hd/";
 export const call = async (path:string) => {
   const res = await fetch(API_ENDPOINT + path, {
     credentials: "include",
-    mode: "cors",
   });
   return await res.json();
 }
 
 export const getWatchParams = async (filmId:string) => {
-  return call("watch-params/" + filmId);
+  return call("watch-params/" + filmId + "?serviceId=25&extension=true");
 }
 
 export const getContentMetadata = async (filmId:string) => {
-  return call("content/" + filmId +"/metadata");
+  return call("content/" + filmId +"/metadata?serviceId=25");
 }
 
 export const getContentChildren = async (filmId:string) => {
