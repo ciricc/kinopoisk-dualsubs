@@ -12,7 +12,7 @@ export const getWatchParams = async (filmId:string) => {
 }
 
 export const getContentMetadata = async (filmId:string) => {
-  return call("content/" + filmId +"/metadata?serviceId=25");
+  return call("content/" + filmId +"/metadata");
 }
 
 export const getContentChildren = async (filmId:string) => {

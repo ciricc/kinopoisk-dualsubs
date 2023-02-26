@@ -142,7 +142,10 @@
     checkVideoPlayerOpenedInterval = setInterval(() => {
       let pl = document.querySelector(
         `[class*="PlayerSkin_layout"]`
-      ) as HTMLVideoElement;
+      ) as HTMLElement;
+      if (!pl) {
+        pl = document.querySelector(`[class*="PlayerManager_player"]`);
+      }
       if (videoPlayerElement !== pl) {
         videoPlayerElement = pl;
         if (videoPlayerElement) {
@@ -157,6 +160,10 @@
   });
 
   const CtrlKey = !isMac() ? "Ctrl" : "⌘";
+  $: {
+    console.log("video player element", videoPlayerElement);
+  }
+  onMount(() => console.log("Mounted"));
 </script>
 
 <svelte:window on:mousemove={mouseMoveHandle} />

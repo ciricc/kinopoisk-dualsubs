@@ -1,6 +1,6 @@
 {
   "name": "Двойные субтитры Кинопоиск HD",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "manifest_version": 3,
   "action": {
     "default_icon": {
@@ -32,6 +32,10 @@
   },
   "permissions": [
     "storage"
+  ],
+  "host_permissions": [
+    "*://api.ott.kinopoisk.ru/*",
+    "*://hd.kinopoisk.ru/*"
   ],
   "homepage_url": "https://github.com/ciricc/kinopoisk-dualsubs#readme"
 }
