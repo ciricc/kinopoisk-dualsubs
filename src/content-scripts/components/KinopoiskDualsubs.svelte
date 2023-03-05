@@ -164,6 +164,7 @@
 
   const updateSubtitles = async () => {
     let subs = await loadSubtitles(renderingSubtitles.url);
+    console.log("Parsed subtitles", subs);
     if (!subs) return;
     parsedCues = srtParser(subs);
   };
@@ -198,8 +199,15 @@
   const findActiveVideoTextTrack = (videoElem:HTMLVideoElement):TextTrack|null => {
     if (!videoElem) return null
     if (!videoElem.textTracks.length) return null;
-    const textTrack = Array.from(videoElem.textTracks).find(el => el.language == watchParams.subtitleLanguage && el.mode != "disabled")
+    // console.log("Video text tracks", Array.from(videoElem.textTracks))
+    const textTracks = Array.from(videoElem.textTracks);
+    let textTrack = textTracks.find(el => el.language == watchParams.subtitleLanguage && el.mode != "disabled")
+    if (!textTrack) {
+      textTrack = textTracks.find(el => el.cues && el.cues.length);
+    }
+    console.log("Found text track", textTrack, textTracks)
     return textTrack || null;
+
   }
 
   const handleChangeVideoTracks = () => {
@@ -235,9 +243,11 @@
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
     const videoTextTrack = findActiveVideoTextTrack(video)
+    console.log("Video track text", videoTextTrack)
     if (!videoTextTrack || !videoTextTrack.cues) return;
     let cues = Array.from(videoTextTrack.cues);
     if (!parsedCues.length) {return}
+    console.log("Filling alt cues", parsedCues)
     for (let i = 0; i < cues.length; i++) {
       let maxCommonArea = 0;
       let maxCommonAreaJ = -1;
@@ -491,7 +501,9 @@
     watchingLocalStorage = false;
     stopIntervals();
   });
-
+  $: console.log("Parsed active cues", parsedCues)
+  $: console.log("Current alt cues", currentAltCues)
+  $: console.log("Current cue index", currentCueIndex)
 </script>
 
 <svelte:body on:click={handleDomChangeLanguage} />

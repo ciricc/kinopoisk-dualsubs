@@ -114,7 +114,7 @@
 
   $: {
     if (appContainer && isOpenedVideoPlayer() && visibleFullScreenController) {
-      videoPlayerElement.appendChild(appContainer);
+      videoPlayerElement.parentElement.appendChild(appContainer);
     } else if (
       appContainer &&
       !visibleFullScreenController &&
@@ -144,7 +144,9 @@
         `[class*="PlayerSkin_layout"]`
       ) as HTMLElement;
       if (!pl) {
-        pl = document.querySelector(`yaplayertag`);
+        pl = document.querySelector(
+          `[class*="PlayerManager_player"] yaplayertag`
+        );
       }
       if (videoPlayerElement !== pl) {
         videoPlayerElement = pl;
