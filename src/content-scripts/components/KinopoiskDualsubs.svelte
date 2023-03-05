@@ -560,7 +560,11 @@
   }
 
   :global(.extension--cues) {
-    @apply fixed flex flex-col px-4 text-shadow-xl shadow-black select-none pointer-events-none w-full bottom-0 text-white text-4xl justify-center items-center;
+    @apply fixed flex z-2 flex-col text-shadow-md shadow-black  px-4  w-full bottom-0 text-white text-4xl justify-center items-center;
+  }
+
+  :global(.extension--cues *::selection) {
+    @apply bg-yellow-300 text-true-gray-900;
   }
 
   :global(.extension--cues-window) {
@@ -572,7 +576,7 @@
   }
 
   :global(.extension--cue-line.extension--alternative-cue) {
-    @apply pt-2 pb-6 text-4xl text-true-gray-300 transition-all ease-out duration-200;
+    @apply pt-2 pb-6 text-4xl text-true-gray-300 select-none pointer-events-none transition-all ease-out duration-200;
   }
 
   :global(.kplayer--paused .extension--cue-line.extension--alternative-cue) {
@@ -584,7 +588,7 @@
   }
 
   :global(.extension--primary-cue) {
-    @apply text-5xl font-semibold;
+    @apply text-5xl cursor-text font-semibold;
   }
 
   :global(.kinopoisk-dualsubs--enable-highlight-primary-cue
