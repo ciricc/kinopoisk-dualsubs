@@ -4,7 +4,7 @@
 
 Расширение не является официальным. Работоспособность на всех устройствах не гарантирована. Это экспериментальный проект, "на коленках".
 
-<img src="https://sun9-1.userapi.com/impg/ETSTohowDpwH1N-EolkeZEZ3fU_s9JWAt2FtVw/OXf2EKORD14.jpg?size=1919x1080&quality=96&sign=b790f6a18906adc7fdb5576a97cfca05&type=album" alt="Демо">
+<img src="https://sun9-1.userapi.com/impg/ETSTohowDpwH1N-EolkeZEZ3fU_s9JWAt2FtVw/OXf2EKORD14.jpg?size=1919x1080&quality=96&sign=b790f6a18906adc7fdb5576a97cfca05&type=album	" alt="Демо">
 
 Поддерживаемые браузеры:
 
@@ -38,6 +38,14 @@
 <a href="https://t.me/kpdualsubs">
 	<img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
 </a>
+
+## Дополнительные интеграции для вашего обучения
+
+С версии `1.12.0` в расширении появилась возможность выделять текст основной дорожки субтитров. Благодаря этому, теперь вы можете добавлять незнакомые слова в различные словари, по типу того, что сделали в [SkyEng](https://chrome.google.com/webstore/detail/vimbox-%D0%BF%D0%B5%D1%80%D0%B5%D0%B2%D0%BE%D0%B4%D1%87%D0%B8%D0%BA-%D0%BE%D1%82-skye/heeikiohkfkolhmdodhcjdklofmhmmhn).
+
+В моем расширении есть визуальная адаптация расширения Vimbox. Все базовые элементы перекрашены в темнную тему и сочетаются с общей стилистикой двойных субтитров.
+
+<img src="https://sun9-74.userapi.com/impg/sEHRS2jZeBhrLlbVExtfKiYWyQXbt91dEwSSuA/pl3h5lsasb4.jpg?size=1920x920&quality=96&sign=8239a3229838a45b5cceb0a0b67a1177&type=album"/>
 
 ## Мотивация
 

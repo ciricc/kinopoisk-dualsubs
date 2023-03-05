@@ -276,4 +276,16 @@
     @apply transform transition-transform duration-100 bg-white min-w-96 pb-6;
     @apply rounded-xl shadow-dark-900/20 shadow-xl text-lg overflow-hidden;
   }
+
+  /** SkyEng extension customizations **/
+  :global(html .wt-sky-long-dialog, html .wt-sky-dialog) {
+    @apply bg-true-gray-900;
+  }
+  :global(html .wt-sky-dialog__translation-item, html .wt-sky-long-dialog) {
+    @apply text-light-200;
+  }
+
+  :global(html .wt-sky-dialog__translation-item--added) {
+    @apply bg-true-gray-700;
+  }
 </style>
