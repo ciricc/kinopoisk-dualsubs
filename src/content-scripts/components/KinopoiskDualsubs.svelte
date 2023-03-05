@@ -164,7 +164,6 @@
 
   const updateSubtitles = async () => {
     let subs = await loadSubtitles(renderingSubtitles.url);
-    console.log("Parsed subtitles", subs);
     if (!subs) return;
     parsedCues = srtParser(subs);
   };
@@ -199,7 +198,6 @@
   const findActiveVideoTextTrack = (videoElem:HTMLVideoElement):TextTrack|null => {
     if (!videoElem) return null
     if (!videoElem.textTracks.length) return null;
-    // console.log("Video text tracks", Array.from(videoElem.textTracks))
     const textTracks = Array.from(videoElem.textTracks);
     let textTrack = textTracks.find(el => el.language == watchParams.subtitleLanguage && el.mode != "disabled")
     if (!textTrack) {

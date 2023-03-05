@@ -32,7 +32,7 @@
 <style>
   .toggle-bg:after {
     content: "";
-    @apply absolute top-0 left-0.5 bg-gray-50 rounded-full h-9 w-9 transition shadow-sm;
+    @apply absolute top-0.25 left-0.5 bg-gray-50 rounded-full h-9 w-9 transition shadow-sm;
   }
 
   .checked .toggle-bg:after {
