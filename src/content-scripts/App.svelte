@@ -17,6 +17,12 @@
   let hideTimeoutNonActive: NodeJS.Timeout;
   let hideFullScreenControllerTimeout: NodeJS.Timeout;
   let checkVideoPlayerOpenedInterval: NodeJS.Timer;
+  let appendInFullScreenElementInterval: NodeJS.Timer;
+
+  let appendingInFullScreenElementsQuerySelectors: string[] = [
+    ".wt-sky-dialog,.wt-sky-long-dialog", // SkyEng support fullscreen mode
+    "#llpopup" // Lingualeo support fullscreen mode
+  ];
 
   let videoPlayerElement: HTMLElement;
   let showedControls = false;
@@ -139,6 +145,14 @@
   }
 
   onMount(() => {
+    appendInFullScreenElementInterval = setInterval(() => {
+      appendingInFullScreenElementsQuerySelectors.forEach(selector => {
+        let elem = document.querySelector(selector);
+        if (!elem) return;
+        if (elem.parentElement == videoPlayerElement) return;
+        videoPlayerElement.appendChild(elem);
+      });
+    }, 100);
     checkVideoPlayerOpenedInterval = setInterval(() => {
       let pl = document.querySelector(
         `[class*="PlayerSkin_layout"]`
@@ -159,6 +173,7 @@
 
   onDestroy(() => {
     clearInterval(checkVideoPlayerOpenedInterval);
+    clearInterval(appendInFullScreenElementInterval);
   });
 
   const CtrlKey = !isMac() ? "Ctrl" : "⌘";
@@ -264,7 +279,7 @@
               <Thumbler
                 id="selectable_primary_cue_enabled"
                 bind:checked={$settings.selectable_primary_cue_enabled}
-                label="Выделение текста"
+                label="Выделение текста (BETA)"
               />
             </div>
           </div>
