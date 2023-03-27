@@ -4,6 +4,7 @@ export type Settings = {
   hightlight_primary_cue_enabled: boolean;
   hotkeys_enabled: boolean;
   show_hotkeys_onboarding: boolean;
+  selectable_primary_cue_enabled: boolean;
 }
 
 export type PlayerContentInformation = {

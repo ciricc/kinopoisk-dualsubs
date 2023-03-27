@@ -260,6 +260,13 @@
                 </div>
               </div>
             {/if}
+            <div class="flex">
+              <Thumbler
+                id="selectable_primary_cue_enabled"
+                bind:checked={$settings.selectable_primary_cue_enabled}
+                label="Выделение текста"
+              />
+            </div>
           </div>
         </div>
       </div>

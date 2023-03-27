@@ -59,6 +59,7 @@
   export let videoPaused: boolean = false;
   let subtitlesSizeRatio: number = 1;
   let windowCuesElement: HTMLElement | null = null;
+  let videoPausedByExtension = false;
 
   const getContentInformation = (): PlayerContentInformation => {
     let currentLocation = document.location.pathname.split("/");
@@ -191,9 +192,17 @@
     if (video.paused) {
       videoPaused = true;
     } else {
+      hideSkyDialog();
+      console.log("Removing ranges");
+      window.getSelection()?.removeAllRanges();
       videoPaused = false;
     }
   };
+
+  const hideSkyDialog = () => {
+    const dialog = document.querySelector('.wt-sky-long-dialog,.wt-sky-dialog');
+    if (dialog) dialog.remove()
+  }
 
   const findActiveVideoTextTrack = (videoElem:HTMLVideoElement):TextTrack|null => {
     if (!videoElem) return null
@@ -331,6 +340,36 @@
     clearInterval(checkVideoCuesInterval);
     clearInterval(checkVideoExistingInterval);
   };
+
+  const pauseVideo = () => {
+    const video = getVideo() 
+    if (!video) return;
+    videoPausedByExtension = true;
+    video.pause();
+  }
+
+  const playVideo = () => {
+    const video = getVideo() 
+    if (!video) return;
+    videoPausedByExtension = false;
+    video.play();
+  }
+
+  const getVideo = () => document.querySelector('video') as HTMLVideoElement | null;
+
+  const onMouseLeftSubtitles = () => {
+    if (videoPausedByExtension) {
+      const selection = window.getSelection();
+      if (selection && selection.toString()) return;
+      playVideo();
+    }
+  }
+
+  const onMouseJoinSubtitles = () => {
+    const video = getVideo();
+    if (video && video.paused) return;
+    pauseVideo();
+  }
 
   // Check toggle
   $: enabled = $settings.doublesubs_enabled;
@@ -517,10 +556,25 @@
   {#if originalCuesPositionBottom}
     <div
       bind:this={windowCuesElement}
-      class="extension--cues {videoPaused ? 'kplayer--paused' : ''}"
+      class="
+        extension--cues {videoPaused ? 'kplayer--paused' : ''}
+        {$settings.selectable_primary_cue_enabled
+        ? 'kinopoisk-dualsubs--enable-selectable-primary-cue'
+        : ''}
+      "
       style="transform: translateY(-{originalCuesPositionBottom}px) scale({subtitlesSizeRatio});"
     >
-      <div class="extension--cues-window">
+      <div
+        on:mousemove={() =>
+          $settings.selectable_primary_cue_enabled
+            ? onMouseJoinSubtitles()
+            : false}
+        on:mouseleave={() =>
+          $settings.selectable_primary_cue_enabled
+            ? onMouseLeftSubtitles()
+            : false}
+        class="extension--cues-window"
+      >
         {#if currentPrimaryCueText}
           <div
             class="extension--cue-line extension--primary-cue {currentAltCues.length
@@ -588,7 +642,12 @@
   }
 
   :global(.extension--primary-cue) {
-    @apply text-5xl cursor-text font-semibold;
+    @apply text-5xl font-semibold cursor-default select-none;
+  }
+
+  :global(.kinopoisk-dualsubs--enable-selectable-primary-cue
+      .extension--primary-cue) {
+    @apply cursor-text select-text;
   }
 
   :global(.kinopoisk-dualsubs--enable-highlight-primary-cue

@@ -21,7 +21,8 @@
 				"dbaeumer.vscode-eslint",
 				"svelte.svelte-vscode",
 				"voorjaar.windicss-intellisense",
-				"vivaxy.vscode-conventional-commits"
+				"vivaxy.vscode-conventional-commits",
+				"eamodio.gitlens"
 			]
 		}
 	},

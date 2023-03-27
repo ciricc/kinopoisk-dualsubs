@@ -6,6 +6,7 @@ export const defaultSettings:Settings = {
   hightlight_primary_cue_enabled: true,
   hotkeys_enabled: true,
   show_hotkeys_onboarding: true,
+  selectable_primary_cue_enabled: false,
 }
 
 export const STORE_KDS_SETTINGS_FIELD = "kds_settings";
