@@ -19,9 +19,9 @@
 
 Чаще всего, обновление доходит в магазины только через нескольно дней, после того, как оно появится во вкладке с [релизами](https://github.com/ciricc/kinopoisk-dualsubs/releases).
 
-|[Opera Addons](https://addons.opera.com/ru/extensions/details/dvoinye-subtitry-kinopoisk-hd/) пока только Opera Beta / Developers |[Chrome Webstore](https://chrome.google.com/webstore/detail/двойные-субтитры-кинопоис/imdaibjngbfnhodjfcbkaiegehaniglh) |
-|-- | -- |
-| <a href="https://addons.opera.com/ru/extensions/details/dvoinye-subtitry-kinopoisk-hd/"><img src="https://addons-static.operacdn.com/static/catalog/images/get-opera/opera-logo.png" width="128px"/></a> |<a href="https://chrome.google.com/webstore/detail/двойные-субтитры-кинопоис/imdaibjngbfnhodjfcbkaiegehaniglh"><img src="https://user-images.githubusercontent.com/20687373/181228666-cc05758a-4fce-4a6f-ab76-9cbb0d7dd1db.png" width="128px"/></a> |
+|[Chrome Webstore](https://chrome.google.com/webstore/detail/двойные-субтитры-кинопоис/imdaibjngbfnhodjfcbkaiegehaniglh) |
+| -- |
+| <a href="https://chrome.google.com/webstore/detail/двойные-субтитры-кинопоис/imdaibjngbfnhodjfcbkaiegehaniglh"><img src="https://user-images.githubusercontent.com/20687373/181228666-cc05758a-4fce-4a6f-ab76-9cbb0d7dd1db.png" width="128px"/></a> |
 
 ### Вручную
 
@@ -45,7 +45,7 @@
 
 В моем расширении есть визуальная адаптация расширения Vimbox. Все базовые элементы перекрашены в темнную тему и сочетаются с общей стилистикой двойных субтитров.
 
-<img src="https://sun9-74.userapi.com/impg/sEHRS2jZeBhrLlbVExtfKiYWyQXbt91dEwSSuA/pl3h5lsasb4.jpg?size=1920x920&quality=96&sign=8239a3229838a45b5cceb0a0b67a1177&type=album"/>
+<img src="https://sun1-17.userapi.com/impg/_BjlbdcjKgCImlZCNpSU7-pThScXBjrEXCgDGQ/_v_7DgPewOg.jpg?size=2560x1264&quality=96&sign=aea0f32180a0a7fddc6ac356e4f168b3&type=album"/>
 
 ## Мотивация
 
