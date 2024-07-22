@@ -21,12 +21,6 @@
     ENG: "eng",
   };
 
-  enum CogType {
-    Rate = "rate",
-    Quality = "quality",
-    Unknown = "",
-  }
-
   const MAX_INTERVAL_WORK_TIME = 60000; // ms
   const CHECK_INTERVAL_TIME = 200;
 
@@ -134,38 +128,6 @@
     }
   };
 
-  const handleDomChangeLanguage = (e: MouseEvent) => {
-    let el = e.target as HTMLElement;
-
-    if (el && el.getAttribute("type") === "radio") {
-      let val = el.getAttribute("value");
-      if (!Object.values(CogType).includes(val as CogType)) {
-        // If some cog has already been opened, then we need to check the value
-        // Если мы сейчас уже открыли какую-то шестеренку - проверяем значение
-        const isAudioIdRadio = val.includes("aid");
-        const isSubtitlesIdRadio =
-          val.includes("sid") || val.includes("subtitles");
-
-        if (isSubtitlesIdRadio || isAudioIdRadio) {
-          if (isSubtitlesIdRadio) {
-            if (val.includes("sid")) {
-              watchParams.subtitleLanguage = val;
-            } else {
-              watchParams.subtitleLanguage = el
-                .getAttribute("value")
-                .split("/")[1];
-            }
-          } else if (val == "") {
-            watchParams.subtitleLanguage = "";
-            clearSubtitles();
-          }
-
-          return;
-        }
-      }
-    }
-  };
-
   const loadSubtitles = async (path: string) => {
     if (cachedSubtiles[path]) return cachedSubtiles[path];
     let body = await fetch(path, {
@@ -178,7 +140,12 @@
 
   const updateSubtitles = async () => {
     let subs = await loadSubtitles(renderingSubtitles.url);
-    if (!subs) return;
+    if (!subs)
+      return console.error(
+        "There is no any subtitles",
+        "url",
+        renderingSubtitles.url,
+      );
     parsedCues = srtParser(subs);
   };
 
@@ -589,9 +556,9 @@
   $: console.log("Parsed active cues", parsedCues);
   $: console.log("Current alt cues", currentAltCues);
   $: console.log("Current cue index", currentCueIndex);
+  $: console.log("Current watch params", watchParams);
 </script>
 
-<svelte:body on:click={handleDomChangeLanguage} />
 <PlayerHotKeys
   enabled={$settings.hotkeys_enabled}
   on:nextreplica={() => stepReplica(1)}
