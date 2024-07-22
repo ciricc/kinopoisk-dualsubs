@@ -4,7 +4,7 @@
 
 Расширение не является официальным. Работоспособность на всех устройствах не гарантирована. Это экспериментальный проект, "на коленках".
 
-<img src="https://sun9-74.userapi.com/impg/NTJSWIomErrKk87r39Mi0E3o3uZ0c28qFXlsbg/vbG8MpaXFXY.jpg?size=1920x899&quality=96&sign=14ab81de10366a8dd7b2a2f07bee1b1a&type=album" alt="Демо">
+<img src="https://sun9-60.userapi.com/impg/T1EKLjoDXNEYhWXZOq8VcLh1XvrythG36vqACw/w7QmNn9Bv88.jpg?size=2560x1264&quality=96&sign=5f58e9e4c04557ac8d708c8c3f209b57&type=album" alt="Демо">
 
 Поддерживаемые браузеры:
 
@@ -45,7 +45,7 @@
 
 В моем расширении есть визуальная адаптация расширения Vimbox. Все базовые элементы перекрашены в темнную тему и сочетаются с общей стилистикой двойных субтитров.
 
-<img src="https://sun1-17.userapi.com/impg/_BjlbdcjKgCImlZCNpSU7-pThScXBjrEXCgDGQ/_v_7DgPewOg.jpg?size=2560x1264&quality=96&sign=aea0f32180a0a7fddc6ac356e4f168b3&type=album"/>
+<img src="https://sun1-99.userapi.com/impg/1yeRWdSFhTVtd9PGm1NJJttQxpsZN5sv023ilA/jIjVTpiKWSI.jpg?size=2560x1264&quality=96&sign=61d38739e097c18c084b7c4b50b7e756&type=album"/>
 
 ## Мотивация
 

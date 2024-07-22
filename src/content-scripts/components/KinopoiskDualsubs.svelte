@@ -69,6 +69,7 @@
   let subtitlesSizeRatio: number = 1;
   let windowCuesElement: HTMLElement | null = null;
   let videoPausedByExtension = false;
+  let activeVideoTrack: TextTrack | null = null;
 
   const getContentInformation = (): PlayerContentInformation => {
     let currentLocation = document.location.pathname.split("/");
@@ -87,6 +88,14 @@
     console.log("Getting watch params by film", contentInfo.filmId);
     watchParams = await getWatchParams(contentInfo.filmId);
     console.log("Loaded watch params", watchParams);
+  };
+
+  const isRussianLanguage = (languageCode: string): boolean => {
+    return languageCode === LANGAUGES.RUS || languageCode === LANGAUGES.RUSX18;
+  };
+
+  const isEnglishLanguage = (languageCode: string): boolean => {
+    return languageCode === LANGAUGES.ENG;
   };
 
   const loadContentSubtitles = async () => {
@@ -114,21 +123,29 @@
 
     if (watchParams.subtitleLanguage.startsWith("sid")) {
       let index = parseInt(watchParams.subtitleLanguage.replace("sid", ""));
+      console.info(
+        "subtitle language is a sid",
+        "streams",
+        streamsMetadata.streams[0],
+        "sid",
+        index,
+      );
       if (streamsMetadata.streams[0].subtitles[index]) {
         watchParams.subtitleLanguage =
           streamsMetadata.streams[0].subtitles[index].language;
+      } else {
+        console.error("Can't convert sid language to language code");
       }
     }
 
     let subs = streamsMetadata.streams[0].subtitles.find((sub) => {
-      return (
-        ((sub.language === LANGAUGES.RUS ||
-          sub.language === LANGAUGES.RUSX18) &&
-          watchParams.subtitleLanguage === LANGAUGES.ENG) ||
-        (sub.language === LANGAUGES.ENG &&
-          (watchParams.subtitleLanguage === LANGAUGES.RUS ||
-            watchParams.subtitleLanguage === LANGAUGES.RUSX18))
-      );
+      if (isEnglishLanguage(watchParams.subtitleLanguage)) {
+        return sub.language === LANGAUGES.RUS;
+      } else if (isRussianLanguage(watchParams.subtitleLanguage)) {
+        return sub.language === LANGAUGES.ENG;
+      }
+
+      return false;
     });
 
     if (subs) {
@@ -141,6 +158,14 @@
       );
 
       altPlayerSubtitlesConfig = subs;
+    } else {
+      console.error(
+        "Not found alternative subtitles",
+        "primaryLang",
+        watchParams.subtitleLanguage,
+        "streamLanguages",
+        streamsMetadata.streams[0].subtitles.map((s) => s.language),
+      );
     }
   };
 
@@ -169,6 +194,15 @@
 
   const changeCueHandler = (e: Event) => {
     const track = e.target as TextTrack;
+
+    activeVideoTrack = track;
+    if (
+      watchParams.subtitleLanguage != activeVideoTrack.language &&
+      activeVideoTrack.language
+    ) {
+      watchParams.subtitleLanguage = activeVideoTrack.language;
+    }
+
     if (track.activeCues.length) {
       if (!indexedAltCues.length && parsedAltSrtCues.length)
         prepareAltCuesList();
