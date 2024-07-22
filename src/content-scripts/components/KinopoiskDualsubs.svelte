@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {
     PlayerContentInformation,
-    PlayerSubtitles,
+    PlayerSubtitles as PlayerSubtitlesConfig,
     PlayerWatchParams,
   } from "../../types";
   import { onDestroy } from "svelte";
@@ -14,6 +14,13 @@
     getContentStreamsMetadata,
     getWatchParams,
   } from "../../lib/scriptsConnector";
+
+  enum CogType {
+    Rate = "rate",
+    Quality = "quality",
+    SubtitlesSize = "subtitlesSize",
+    Unknown = "",
+  }
 
   const LANGAUGES = {
     RUS: "rus",
@@ -42,18 +49,19 @@
     subtitleLanguage: "",
   };
 
-  let renderingSubtitles: PlayerSubtitles;
+  let altPlayerSubtitlesConfig: PlayerSubtitlesConfig;
 
   let checkPageUrlChangeInterval: NodeJS.Timeout;
   let checkVideoExistingInterval: NodeJS.Timeout;
   let checkVideoCuesInterval: NodeJS.Timeout;
   let checkingOriginalSubtitlesYPosition = false;
   let watchingLocalStorage = false;
-
-  let parsedCues: Cue[] = [];
   let enabled: boolean = false;
-  let currentAltCues: string[] = [];
-  let currentCueIndex: null | number = null;
+
+  let parsedAltSrtCues: Cue[] = [];
+  let indexedAltCues: string[] = [];
+
+  let currentPrimaryCueIndex: null | number = null;
   let currentPrimaryCueText = "";
 
   export let videoPaused: boolean = false;
@@ -124,7 +132,15 @@
     });
 
     if (subs) {
-      renderingSubtitles = subs;
+      console.log(
+        "Loaded new alt subtitles",
+        "lang",
+        subs.language,
+        "primaryLang",
+        watchParams.subtitleLanguage,
+      );
+
+      altPlayerSubtitlesConfig = subs;
     }
   };
 
@@ -139,31 +155,34 @@
   };
 
   const updateSubtitles = async () => {
-    let subs = await loadSubtitles(renderingSubtitles.url);
-    if (!subs)
+    let altSUbs = await loadSubtitles(altPlayerSubtitlesConfig.url);
+
+    if (!altSUbs)
       return console.error(
         "There is no any subtitles",
         "url",
-        renderingSubtitles.url,
+        altPlayerSubtitlesConfig.url,
       );
-    parsedCues = srtParser(subs);
+
+    parsedAltSrtCues = srtParser(altSUbs);
   };
 
   const changeCueHandler = (e: Event) => {
     const track = e.target as TextTrack;
     if (track.activeCues.length) {
-      if (!currentAltCues.length && parsedCues.length) fillAltCues();
+      if (!indexedAltCues.length && parsedAltSrtCues.length)
+        prepareAltCuesList();
       const activeCue = track.activeCues[0] as VTTCue;
       currentPrimaryCueText = activeCue.text;
       const primaryCueIndex = Array.from(track.cues).indexOf(activeCue);
       if (primaryCueIndex !== -1) {
-        currentCueIndex = primaryCueIndex;
+        currentPrimaryCueIndex = primaryCueIndex;
         return;
       }
-      currentCueIndex = null;
+      currentPrimaryCueIndex = null;
       return;
     }
-    currentCueIndex = null;
+    currentPrimaryCueIndex = null;
     currentPrimaryCueText = "";
   };
 
@@ -173,7 +192,6 @@
       videoPaused = true;
     } else {
       hideSkyDialog();
-      console.log("Removing ranges");
       window.getSelection()?.removeAllRanges();
       videoPaused = false;
     }
@@ -215,7 +233,7 @@
       let videos = document.body.getElementsByTagName("video");
       if (findActiveVideoTextTrack(videos[0])) {
         clearInterval(checkVideoCuesInterval);
-        fillAltCues();
+        prepareAltCuesList();
         findActiveVideoTextTrack(videos[0]).addEventListener(
           "cuechange",
           changeCueHandler,
@@ -234,32 +252,38 @@
 
   const clearSubtitles = () => {
     currentPrimaryCueText = "";
-    currentCueIndex = null;
-    currentAltCues = [];
+    currentPrimaryCueIndex = null;
+    indexedAltCues = [];
   };
 
-  const fillAltCues = () => {
-    currentAltCues = [];
+  const prepareAltCuesList = () => {
+    indexedAltCues = [];
 
-    let videos = document.body.getElementsByTagName("video");
-    let video = videos[0];
-    const videoTextTrack = findActiveVideoTextTrack(video);
-
-    console.log("Video track text", videoTextTrack);
-    if (!videoTextTrack || !videoTextTrack.cues) return;
-
-    let cues = Array.from(videoTextTrack.cues);
-    if (!parsedCues.length) {
+    if (!parsedAltSrtCues.length) {
+      console.error("There is no parsed cues");
       return;
     }
 
-    console.log("Filling alt cues", parsedCues);
+    let videos = document.body.getElementsByTagName("video");
+    let video = videos[0];
+
+    const videoTextTrack = findActiveVideoTextTrack(video);
+
+    console.log("Video text track cues", videoTextTrack.cues);
+    if (!videoTextTrack || !videoTextTrack.cues) return;
+
+    let cues = Array.from(videoTextTrack.cues);
+
+    console.log("Filling alt cues", parsedAltSrtCues);
+
+    // Creating for each video text track cue alternative
+    // cues from parsed cues list
     for (let i = 0; i < cues.length; i++) {
       let maxCommonArea = 0;
       let maxCommonAreaJ = -1;
 
-      for (let j = 0; j < parsedCues.length; j++) {
-        let parsedCue = parsedCues[j];
+      for (let j = 0; j < parsedAltSrtCues.length; j++) {
+        let parsedCue = parsedAltSrtCues[j];
         let cue = cues[i];
 
         let rightSide = Math.min(parsedCue.endTime / 1000, cue.endTime);
@@ -278,18 +302,18 @@
       }
 
       if (maxCommonAreaJ != -1) {
-        currentAltCues.push(
-          parsedCues[maxCommonAreaJ].text.replace(/\n/g, " "),
+        indexedAltCues.push(
+          parsedAltSrtCues[maxCommonAreaJ].text.replace(/\n/g, " "),
         );
       } else {
-        currentAltCues.push("");
+        indexedAltCues.push("");
       }
     }
   };
 
   const clearCurrentCues = () => {
-    renderingSubtitles = null;
-    parsedCues = [];
+    altPlayerSubtitlesConfig = null;
+    parsedAltSrtCues = [];
   };
 
   const stepReplica = (i: number) => {
@@ -468,51 +492,51 @@
 
   // Change active subtitles
   $: {
-    if (renderingSubtitles) {
+    if (altPlayerSubtitlesConfig) {
       updateSubtitles();
     }
   }
 
   // Change rendering cues
   $: {
-    if (parsedCues) {
+    if (parsedAltSrtCues) {
+      console.log("New parsed cues", parsedAltSrtCues);
       clearInterval(checkVideoExistingInterval);
-      if (parsedCues.length || true) {
-        let intervalStart = Date.now();
-        checkVideoExistingInterval = setInterval(() => {
-          let videos = document.body.getElementsByTagName("video");
-          if (
-            !videos.length ||
-            !videos[0].textTracks ||
-            !videos[0].textTracks.length
-          ) {
-            if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME)
-              clearInterval(checkVideoExistingInterval);
-            return;
-          }
 
-          clearInterval(checkVideoExistingInterval);
+      let intervalStart = Date.now();
+      checkVideoExistingInterval = setInterval(() => {
+        let videos = document.body.getElementsByTagName("video");
+        if (
+          !videos.length ||
+          !videos[0].textTracks ||
+          !videos[0].textTracks.length
+        ) {
+          if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME)
+            clearInterval(checkVideoExistingInterval);
+          return;
+        }
 
-          videos[0].textTracks.removeEventListener(
-            "change",
-            handleChangeVideoTracks,
-          );
+        clearInterval(checkVideoExistingInterval);
 
-          videos[0].removeEventListener("play", handleChangeVideoState);
-          videos[0].removeEventListener("pause", handleChangeVideoState);
+        videos[0].textTracks.removeEventListener(
+          "change",
+          handleChangeVideoTracks,
+        );
 
-          videos[0].textTracks.addEventListener(
-            "change",
-            handleChangeVideoTracks,
-          );
+        videos[0].removeEventListener("play", handleChangeVideoState);
+        videos[0].removeEventListener("pause", handleChangeVideoState);
 
-          videos[0].addEventListener("play", handleChangeVideoState);
-          videos[0].addEventListener("pause", handleChangeVideoState);
+        videos[0].textTracks.addEventListener(
+          "change",
+          handleChangeVideoTracks,
+        );
 
-          videoPaused = videos[0].paused;
-          handleChangeVideoTracks();
-        }, CHECK_INTERVAL_TIME);
-      }
+        videos[0].addEventListener("play", handleChangeVideoState);
+        videos[0].addEventListener("pause", handleChangeVideoState);
+
+        videoPaused = videos[0].paused;
+        handleChangeVideoTracks();
+      }, CHECK_INTERVAL_TIME);
     }
   }
 
@@ -531,6 +555,37 @@
       document.body.classList.remove(activeHighlightClass);
     }
   }
+
+  // This function checks whether language changed by radio button or not
+  const handleDomChangeLanguage = (e: MouseEvent) => {
+    let el = e.target as HTMLElement;
+    if (el && el.getAttribute("type") === "radio") {
+      console.log("Clicked on new language radio", "el", el);
+      let val = el.getAttribute("value");
+      if (!Object.values(CogType).includes(val as CogType)) {
+        // If some cog has already been opened, then we need to check the value
+        // Если мы сейчас уже открыли какую-то шестеренку - проверяем значение
+        const isAudioIdRadio = val.includes("aid");
+        const isSubtitlesIdRadio =
+          val.includes("sid") || val.includes("subtitles");
+        if (isSubtitlesIdRadio || isAudioIdRadio) {
+          if (isSubtitlesIdRadio) {
+            if (val.includes("sid")) {
+              watchParams.subtitleLanguage = val;
+            } else {
+              watchParams.subtitleLanguage = el
+                .getAttribute("value")
+                .split("/")[1];
+            }
+          } else if (val == "") {
+            watchParams.subtitleLanguage = "";
+            clearSubtitles();
+          }
+          return;
+        }
+      }
+    }
+  };
 
   const syncWithLocalStorage = () => {
     let lsSubtitlesSizeRatio = +localStorage.getItem("subtitlesRatio");
@@ -553,12 +608,13 @@
     stopIntervals();
   });
 
-  $: console.log("Parsed active cues", parsedCues);
-  $: console.log("Current alt cues", currentAltCues);
-  $: console.log("Current cue index", currentCueIndex);
+  $: console.log("Parsed active cues", parsedAltSrtCues);
+  $: console.log("Current alt cues", indexedAltCues);
+  $: console.log("Current cue index", currentPrimaryCueIndex);
   $: console.log("Current watch params", watchParams);
 </script>
 
+<svelte:body on:click={handleDomChangeLanguage} />
 <PlayerHotKeys
   enabled={$settings.hotkeys_enabled}
   on:nextreplica={() => stepReplica(1)}
@@ -592,16 +648,16 @@
       >
         {#if currentPrimaryCueText}
           <div
-            class="extension--cue-line extension--primary-cue {currentAltCues.length
+            class="extension--cue-line extension--primary-cue {indexedAltCues.length
               ? ''
               : 'no-highlight'}"
           >
             {@html currentPrimaryCueText.replaceAll("\n", "<br/>")}
           </div>
         {/if}
-        {#if currentCueIndex != null && currentAltCues[currentCueIndex]}
+        {#if currentPrimaryCueIndex != null && indexedAltCues[currentPrimaryCueIndex]}
           <div class="extension--cue-line extension--alternative-cue">
-            {@html currentAltCues[currentCueIndex]}
+            {@html indexedAltCues[currentPrimaryCueIndex]}
           </div>
         {/if}
       </div>
