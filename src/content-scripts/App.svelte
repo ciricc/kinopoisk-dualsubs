@@ -21,7 +21,7 @@
 
   let appendingInFullScreenElementsQuerySelectors: string[] = [
     ".wt-sky-dialog,.wt-sky-long-dialog", // SkyEng support fullscreen mode
-    "#llpopup" // Lingualeo support fullscreen mode
+    "#llpopup", // Lingualeo support fullscreen mode
   ];
 
   let videoPlayerElement: HTMLElement;
@@ -48,7 +48,7 @@
 
   const setVisibleFullScreenController = async (
     newVal: boolean,
-    autoHide = true
+    autoHide = true,
   ) => {
     if (newVal) {
       visibleFullScreenController = newVal;
@@ -70,7 +70,7 @@
       () => {
         hide();
       },
-      visibleFullScreenController ? 550 : 1550
+      visibleFullScreenController ? 550 : 1550,
     );
   };
 
@@ -146,22 +146,23 @@
 
   onMount(() => {
     appendInFullScreenElementInterval = setInterval(() => {
-      appendingInFullScreenElementsQuerySelectors.forEach(selector => {
+      appendingInFullScreenElementsQuerySelectors.forEach((selector) => {
         let elem = document.querySelector(selector);
         if (!elem) return;
         if (elem.parentElement == videoPlayerElement) return;
         videoPlayerElement.appendChild(elem);
       });
     }, 100);
+
     checkVideoPlayerOpenedInterval = setInterval(() => {
       let pl = document.querySelector(
-        `[class*="PlayerSkin_layout"]`
+        `[class*="PlayerSkin_layout"]`,
       ) as HTMLElement;
+
       if (!pl) {
-        pl = document.querySelector(
-          `[class*="PlayerManager_player"] yaplayertag`
-        );
+        pl = document.querySelector(`[class*="PlayerManager_player"]`);
       }
+
       if (videoPlayerElement !== pl) {
         videoPlayerElement = pl;
         if (videoPlayerElement) {
@@ -177,16 +178,12 @@
   });
 
   const CtrlKey = !isMac() ? "Ctrl" : "⌘";
+
   $: {
-    console.log("video player element", videoPlayerElement);
+    console.log("Video player element", videoPlayerElement);
   }
 
   window["is_dualsubsUser"] = true;
-  // var scriptElementCode = `fetch("https://api.ott.kinopoisk.ru", {})`;
-  // var scriptElement = document.createElement("script");
-  // scriptElement.textContent = scriptElementCode;
-  // document.body.appendChild(scriptElement);
-  onMount(() => console.log("Mounted"));
 </script>
 
 <svelte:window on:mousemove={mouseMoveHandle} />
@@ -279,7 +276,7 @@
               <Thumbler
                 id="selectable_primary_cue_enabled"
                 bind:checked={$settings.selectable_primary_cue_enabled}
-                label="Выделение текста (BETA)"
+                label="Выделение текста"
               />
             </div>
           </div>

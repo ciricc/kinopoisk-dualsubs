@@ -4,28 +4,28 @@
 
     export let enabled = true;
     export let hotKeys: {
-        keys: string;
+        keys: string[];
         event: string;
     }[] = [
         {
-            keys: "ctrl+.",
-            event: "nextreplica"
+            keys: ["ctrl+.", "command+."],
+            event: "nextreplica",
         },
         {
-            keys: "ctrl+,",
-            event: "prevreplica"
+            keys: ["ctrl+,", "command+,"],
+            event: "prevreplica",
         },
         {
-            keys: "shift+s",
-            event: "toggledualsubs"
-        }
+            keys: ["shift+s"],
+            event: "toggledualsubs",
+        },
     ];
 
     const dispatch = createEventDispatcher();
 
     const bindKeys = () => {
-        hotKeys.forEach(item => {
-            MouseTrap.bind(item.keys, function(e) {
+        hotKeys.forEach((item) => {
+            MouseTrap.bind(item.keys, function (e) {
                 e.preventDefault();
                 dispatch(item.event);
             });
@@ -33,7 +33,7 @@
     };
 
     const unbindKeys = () => {
-        hotKeys.forEach(item => MouseTrap.unbind(item.keys));
+        hotKeys.forEach((item) => MouseTrap.unbind(item.keys));
     };
 
     $: {

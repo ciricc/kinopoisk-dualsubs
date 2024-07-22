@@ -8,7 +8,12 @@
   import { settings } from "../stores/settings";
   import { Cue, srtParser } from "../../lib/srtParser";
   import PlayerHotKeys from "./PlayerHotKeys.svelte";
-  import { getContentChildren, getContentMetadata, getContentStreamsMetadata, getWatchParams } from "../../lib/scriptsConnector";
+  import {
+    getContentChildren,
+    getContentMetadata,
+    getContentStreamsMetadata,
+    getWatchParams,
+  } from "../../lib/scriptsConnector";
 
   const LANGAUGES = {
     RUS: "rus",
@@ -56,7 +61,9 @@
   let currentAltCues: string[] = [];
   let currentCueIndex: null | number = null;
   let currentPrimaryCueText = "";
+
   export let videoPaused: boolean = false;
+
   let subtitlesSizeRatio: number = 1;
   let windowCuesElement: HTMLElement | null = null;
   let videoPausedByExtension = false;
@@ -66,13 +73,13 @@
     let params = new URLSearchParams(document.location.search);
     let episodeNumber = +params.get("episode");
     let seasonNumber = +params.get("season");
+
     return {
       episode: isNaN(episodeNumber) ? 0 : episodeNumber,
       season: isNaN(seasonNumber) ? 0 : seasonNumber,
       filmId: params.get("rt") || currentLocation[2] || "",
     };
   };
- 
 
   const updateWatchParams = async () => {
     console.log("Getting watch params by film", contentInfo.filmId);
@@ -80,11 +87,12 @@
     console.log("Loaded watch params", watchParams);
   };
 
-
   const loadContentSubtitles = async () => {
     console.log("Loading subtitles", contentInfo.filmId);
+
     let metadata = await getContentMetadata(contentInfo.filmId);
     let contentId = contentInfo.filmId;
+
     if (
       metadata.contentType === "tv-series" &&
       contentInfo.season &&
@@ -92,13 +100,16 @@
     ) {
       let tv = await getContentChildren(contentId);
       let episode = tv.seasons[contentInfo.season - 1].episodes.find(
-        (ep) => ep.number === contentInfo.episode
+        (ep) => ep.number === contentInfo.episode,
       );
+
       contentId = contentId ? (episode.filmId as string) : "";
     }
 
     if (!contentId) return;
+
     let streamsMetadata = await getContentStreamsMetadata(contentId);
+
     if (watchParams.subtitleLanguage.startsWith("sid")) {
       let index = parseInt(watchParams.subtitleLanguage.replace("sid", ""));
       if (streamsMetadata.streams[0].subtitles[index]) {
@@ -125,9 +136,11 @@
 
   const handleDomChangeLanguage = (e: MouseEvent) => {
     let el = e.target as HTMLElement;
+
     if (el && el.getAttribute("type") === "radio") {
       let val = el.getAttribute("value");
       if (!Object.values(CogType).includes(val as CogType)) {
+        // If some cog has already been opened, then we need to check the value
         // Если мы сейчас уже открыли какую-то шестеренку - проверяем значение
         const isAudioIdRadio = val.includes("aid");
         const isSubtitlesIdRadio =
@@ -200,26 +213,35 @@
   };
 
   const hideSkyDialog = () => {
-    const dialog = document.querySelector('.wt-sky-long-dialog,.wt-sky-dialog');
-    if (dialog) dialog.remove()
-  }
+    const dialog = document.querySelector(".wt-sky-long-dialog,.wt-sky-dialog");
+    if (dialog) dialog.remove();
+  };
 
-  const findActiveVideoTextTrack = (videoElem:HTMLVideoElement):TextTrack|null => {
-    if (!videoElem) return null
+  const findActiveVideoTextTrack = (
+    videoElem: HTMLVideoElement,
+  ): TextTrack | null => {
+    if (!videoElem) return null;
     if (!videoElem.textTracks.length) return null;
-    const textTracks = Array.from(videoElem.textTracks);
-    let textTrack = textTracks.find(el => el.language == watchParams.subtitleLanguage && el.mode != "disabled")
-    if (!textTrack) {
-      textTrack = textTracks.find(el => el.cues && el.cues.length);
-    }
-    console.log("Found text track", textTrack, textTracks)
-    return textTrack || null;
 
-  }
+    const textTracks = Array.from(videoElem.textTracks);
+    let textTrack = textTracks.find(
+      (el) =>
+        el.language == watchParams.subtitleLanguage && el.mode != "disabled",
+    );
+
+    if (!textTrack) {
+      textTrack = textTracks.find((el) => el.cues && el.cues.length);
+    }
+
+    console.log("Found text track", textTrack, textTracks);
+    return textTrack || null;
+  };
 
   const handleChangeVideoTracks = () => {
     clearInterval(checkVideoCuesInterval);
+
     let intervalStart = Date.now();
+
     const checkCues = async () => {
       if (Date.now() - intervalStart >= MAX_INTERVAL_WORK_TIME)
         clearInterval(checkVideoCuesInterval);
@@ -227,7 +249,10 @@
       if (findActiveVideoTextTrack(videos[0])) {
         clearInterval(checkVideoCuesInterval);
         fillAltCues();
-        findActiveVideoTextTrack(videos[0]).addEventListener("cuechange", changeCueHandler);
+        findActiveVideoTextTrack(videos[0]).addEventListener(
+          "cuechange",
+          changeCueHandler,
+        );
       } else {
         clearSubtitles();
       }
@@ -236,6 +261,7 @@
     checkVideoCuesInterval = setInterval(() => {
       checkCues();
     }, CHECK_INTERVAL_TIME);
+
     checkCues();
   };
 
@@ -247,14 +273,20 @@
 
   const fillAltCues = () => {
     currentAltCues = [];
+
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
-    const videoTextTrack = findActiveVideoTextTrack(video)
-    console.log("Video track text", videoTextTrack)
+    const videoTextTrack = findActiveVideoTextTrack(video);
+
+    console.log("Video track text", videoTextTrack);
     if (!videoTextTrack || !videoTextTrack.cues) return;
+
     let cues = Array.from(videoTextTrack.cues);
-    if (!parsedCues.length) {return}
-    console.log("Filling alt cues", parsedCues)
+    if (!parsedCues.length) {
+      return;
+    }
+
+    console.log("Filling alt cues", parsedCues);
     for (let i = 0; i < cues.length; i++) {
       let maxCommonArea = 0;
       let maxCommonAreaJ = -1;
@@ -280,7 +312,7 @@
 
       if (maxCommonAreaJ != -1) {
         currentAltCues.push(
-          parsedCues[maxCommonAreaJ].text.replace(/\n/g, " ")
+          parsedCues[maxCommonAreaJ].text.replace(/\n/g, " "),
         );
       } else {
         currentAltCues.push("");
@@ -296,8 +328,16 @@
   const stepReplica = (i: number) => {
     let videos = document.body.getElementsByTagName("video");
     let video = videos[0];
-    if (!video || !video.textTracks.length || !findActiveVideoTextTrack(video).cues) return;
+
+    if (
+      !video ||
+      !video.textTracks.length ||
+      !findActiveVideoTextTrack(video).cues
+    )
+      return;
+
     let cues = Array.from(findActiveVideoTextTrack(video).cues);
+
     if (cues.length) {
       let activeCues = findActiveVideoTextTrack(video).activeCues;
       if (activeCues.length) {
@@ -316,11 +356,13 @@
       } else {
         let currentTime = video.currentTime;
         let newCue: TextTrackCue | null = null;
+
         if (i > 0) {
           newCue = cues.find((el) => el.startTime > currentTime);
         } else {
           for (let i = 0; i < cues.length; i++) {
             let cue = cues[i];
+
             if (cue.startTime < currentTime) {
               newCue = cue;
             } else {
@@ -328,6 +370,7 @@
             }
           }
         }
+
         if (newCue) {
           video.currentTime = newCue.startTime;
         }
@@ -342,20 +385,23 @@
   };
 
   const pauseVideo = () => {
-    const video = getVideo() 
+    const video = getVideo();
     if (!video) return;
+
     videoPausedByExtension = true;
     video.pause();
-  }
+  };
 
   const playVideo = () => {
-    const video = getVideo() 
+    const video = getVideo();
     if (!video) return;
+
     videoPausedByExtension = false;
     video.play();
-  }
+  };
 
-  const getVideo = () => document.querySelector('video') as HTMLVideoElement | null;
+  const getVideo = () =>
+    document.querySelector("video") as HTMLVideoElement | null;
 
   const onMouseLeftSubtitles = () => {
     if (videoPausedByExtension) {
@@ -363,13 +409,13 @@
       if (selection && selection.toString()) return;
       playVideo();
     }
-  }
+  };
 
   const onMouseJoinSubtitles = () => {
     const video = getVideo();
     if (video && video.paused) return;
     pauseVideo();
-  }
+  };
 
   // Check toggle
   $: enabled = $settings.doublesubs_enabled;
@@ -389,7 +435,7 @@
             if (originalCuesRect.y < window.innerHeight / 2) {
               heightOffset = Math.max(
                 originalCuesRect.height,
-                windowCuesElementRect ? windowCuesElementRect.height : null
+                windowCuesElementRect ? windowCuesElementRect.height : null,
               );
             }
             originalCuesPositionBottom =
@@ -399,6 +445,7 @@
           if (!checkingOriginalSubtitlesYPosition) return;
           requestAnimationFrame(moveOriginalQuesByY);
         };
+
         requestAnimationFrame(() => {
           moveOriginalQuesByY();
         });
@@ -425,7 +472,6 @@
       stopIntervals();
     }
   }
-
 
   // Check page url changing (film, tv series)
   $: {
@@ -482,7 +528,7 @@
 
           videos[0].textTracks.removeEventListener(
             "change",
-            handleChangeVideoTracks
+            handleChangeVideoTracks,
           );
 
           videos[0].removeEventListener("play", handleChangeVideoState);
@@ -490,7 +536,7 @@
 
           videos[0].textTracks.addEventListener(
             "change",
-            handleChangeVideoTracks
+            handleChangeVideoTracks,
           );
 
           videos[0].addEventListener("play", handleChangeVideoState);
@@ -510,7 +556,7 @@
       document.body.classList.remove(activeBlackBgClass);
     }
   }
-  
+
   $: {
     if ($settings.hightlight_primary_cue_enabled) {
       document.body.classList.add(activeHighlightClass);
@@ -534,13 +580,15 @@
 
   watchingLocalStorage = true;
   syncWithLocalStorage();
+
   onDestroy(() => {
     watchingLocalStorage = false;
     stopIntervals();
   });
-  $: console.log("Parsed active cues", parsedCues)
-  $: console.log("Current alt cues", currentAltCues)
-  $: console.log("Current cue index", currentCueIndex)
+
+  $: console.log("Parsed active cues", parsedCues);
+  $: console.log("Current alt cues", currentAltCues);
+  $: console.log("Current cue index", currentCueIndex);
 </script>
 
 <svelte:body on:click={handleDomChangeLanguage} />
@@ -595,21 +643,29 @@
 {/if}
 
 <style>
-  :global(.kinopoisk-dualsubs--enabled
-      [class*="Subtitles_root"]
-      [class*="Subtitles_text"]),
-  :global(.kinopoisk-dualsubs--enabled
-      [class*="Subtitles_root"]
-      [class*="Subtitles_new-text"]) {
+  :global(
+      .kinopoisk-dualsubs--enabled
+        [class*="Subtitles_root"]
+        [class*="Subtitles_text"]
+    ),
+  :global(
+      .kinopoisk-dualsubs--enabled
+        [class*="Subtitles_root"]
+        [class*="Subtitles_new-text"]
+    ) {
     @apply opacity-0;
   }
 
-  :global(.kinopoisk-dualsubs--enabled
-      [class*="PlayerSkin_layout"]
-      [class*="Layout_bottom"]),
-  :global(.kinopoisk-dualsubs--enabled
-      [class*="PlayerSkin_layout"]
-      [class*="ContextMenu_root"]) {
+  :global(
+      .kinopoisk-dualsubs--enabled
+        [class*="PlayerSkin_layout"]
+        [class*="Layout_bottom"]
+    ),
+  :global(
+      .kinopoisk-dualsubs--enabled
+        [class*="PlayerSkin_layout"]
+        [class*="ContextMenu_root"]
+    ) {
     @apply z-2;
   }
 
@@ -645,13 +701,15 @@
     @apply text-5xl font-semibold cursor-default select-none;
   }
 
-  :global(.kinopoisk-dualsubs--enable-selectable-primary-cue
-      .extension--primary-cue) {
+  :global(
+      .kinopoisk-dualsubs--enable-selectable-primary-cue .extension--primary-cue
+    ) {
     @apply cursor-text select-text;
   }
 
-  :global(.kinopoisk-dualsubs--enable-highlight-primary-cue
-      .extension--primary-cue) {
+  :global(
+      .kinopoisk-dualsubs--enable-highlight-primary-cue .extension--primary-cue
+    ) {
     @apply !text-yellow-300;
   }
 

@@ -6,7 +6,7 @@ import { getContentChildren, getContentMetadata, getContentStreamsMetadata, getW
 
 export type RuntimeMessage = {
   event: "ott:get_content_children" | "ott:get_metadata" | "ott:get_watchparams" | "ott:get_content_streams_metadata",
-  data:GetContentChildren&GetMetadataRequest&GetContentStreamsMetadataRequest&GetWatchParams
+  data: GetContentChildren & GetMetadataRequest & GetContentStreamsMetadataRequest & GetWatchParams
 }
 
 export type GetMetadataRequest = {
@@ -20,7 +20,7 @@ export type GetContentStreamsMetadataRequest = {
 
 export type GetContentChildren = GetContentStreamsMetadataRequest;
 
-browser.runtime.onMessage.addListener(async (msg:RuntimeMessage):Promise<any> => {
+browser.runtime.onMessage.addListener(async (msg: RuntimeMessage): Promise<any> => {
   switch (msg.event) {
     case "ott:get_metadata":
       return getContentMetadata(msg.data.filmId);
@@ -33,21 +33,23 @@ browser.runtime.onMessage.addListener(async (msg:RuntimeMessage):Promise<any> =>
     default:
       return null;
   }
-}); 
+});
 
 browser.action.onClicked.addListener(() => {
   browser.tabs.create({
     url: "https://github.com/ciricc/kinopoisk-dualsubs#readme",
-  })  
+  })
 });
 
-browser.storage.sync.get(STORE_KDS_SETTINGS_FIELD).then((v:Settings) => {
-  let settings = {...defaultSettings};
+browser.storage.sync.get(STORE_KDS_SETTINGS_FIELD).then((v: Settings) => {
+  let settings = { ...defaultSettings };
+
   if (v[STORE_KDS_SETTINGS_FIELD]) {
     settings = {
       ...settings,
       ...v[STORE_KDS_SETTINGS_FIELD],
     }
   }
-  browser.storage.sync.set({[STORE_KDS_SETTINGS_FIELD]: settings});
+
+  browser.storage.sync.set({ [STORE_KDS_SETTINGS_FIELD]: settings });
 });
