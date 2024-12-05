@@ -4,7 +4,7 @@
     PlayerSubtitles as PlayerSubtitlesConfig,
     PlayerWatchParams,
   } from "../../types";
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { settings } from "../stores/settings";
   import { Cue, srtParser } from "../../lib/srtParser";
   import PlayerHotKeys from "./PlayerHotKeys.svelte";
@@ -38,7 +38,6 @@
 
   let cachedSubtiles: Record<string, string> = {};
   let pageUrl: string = document.location.href;
-  let originalCuesPositionBottom = 0;
   let contentInfo: PlayerContentInformation = {
     season: 0,
     episode: 0,
@@ -49,12 +48,13 @@
     subtitleLanguage: "",
   };
 
+  let subtitlesPortalElement: HTMLElement = null;
+
   let altPlayerSubtitlesConfig: PlayerSubtitlesConfig;
 
   let checkPageUrlChangeInterval: NodeJS.Timeout;
   let checkVideoExistingInterval: NodeJS.Timeout;
   let checkVideoCuesInterval: NodeJS.Timeout;
-  let checkingOriginalSubtitlesYPosition = false;
   let watchingLocalStorage = false;
   let enabled: boolean = false;
 
@@ -442,40 +442,38 @@
     pauseVideo();
   };
 
+  let checkSubtitlesPortalElementInterval: NodeJS.Timeout;
+
+  onMount(() => {
+    checkSubtitlesPortalElementInterval = setInterval(() => {
+      if (!subtitlesPortalElement)
+        subtitlesPortalElement = document.querySelector(
+          `[data-tid="SubtitlesPortalRoot"]`,
+        );
+    }, 100);
+  });
+
+  onDestroy(() => {
+    clearInterval(checkSubtitlesPortalElementInterval);
+  });
+
   // Check toggle
   $: enabled = $settings.doublesubs_enabled;
+
+  $: {
+    if (subtitlesPortalElement && windowCuesElement) {
+      console.log(
+        "Adding window cues into subtitles portal",
+        "portal",
+        subtitlesPortalElement,
+      );
+      subtitlesPortalElement.appendChild(windowCuesElement);
+    }
+  }
+
   $: {
     if (enabled) {
       clearInterval(checkPageUrlChangeInterval);
-      if (!checkingOriginalSubtitlesYPosition) {
-        checkingOriginalSubtitlesYPosition = true;
-        const moveOriginalQuesByY = () => {
-          const elem = document.querySelector(`[class*="Subtitles_root"]`);
-          if (elem) {
-            const originalCuesRect = elem.getBoundingClientRect();
-            const windowCuesElementRect: DOMRect | null = windowCuesElement
-              ? windowCuesElement.getBoundingClientRect()
-              : null;
-            let heightOffset = originalCuesRect.height;
-            if (originalCuesRect.y < window.innerHeight / 2) {
-              heightOffset = Math.max(
-                originalCuesRect.height,
-                windowCuesElementRect ? windowCuesElementRect.height : null,
-              );
-            }
-            originalCuesPositionBottom =
-              window.innerHeight - (originalCuesRect.y + heightOffset);
-          }
-
-          if (!checkingOriginalSubtitlesYPosition) return;
-          requestAnimationFrame(moveOriginalQuesByY);
-        };
-
-        requestAnimationFrame(() => {
-          moveOriginalQuesByY();
-        });
-      }
-
       checkPageUrlChangeInterval = setInterval(() => {
         if (pageUrl != document.location.href) {
           pageUrl = document.location.href;
@@ -658,72 +656,52 @@
   }}
 />
 {#if enabled}
-  {#if originalCuesPositionBottom}
-    <div
-      bind:this={windowCuesElement}
-      class="
+  <div
+    bind:this={windowCuesElement}
+    class="
         extension--cues {videoPaused ? 'kplayer--paused' : ''}
         {$settings.selectable_primary_cue_enabled
-        ? 'kinopoisk-dualsubs--enable-selectable-primary-cue'
-        : ''}
+      ? 'kinopoisk-dualsubs--enable-selectable-primary-cue'
+      : ''}
       "
-      style="transform: translateY(-{originalCuesPositionBottom}px) scale({subtitlesSizeRatio});"
+  >
+    <!-- style="transform: translateY(-{originalCuesPositionBottom}px) scale({subtitlesSizeRatio});" -->
+    <div
+      on:mousemove={() =>
+        $settings.selectable_primary_cue_enabled
+          ? onMouseJoinSubtitles()
+          : false}
+      on:mouseleave={() =>
+        $settings.selectable_primary_cue_enabled
+          ? onMouseLeftSubtitles()
+          : false}
+      class="extension--cues-window"
     >
-      <div
-        on:mousemove={() =>
-          $settings.selectable_primary_cue_enabled
-            ? onMouseJoinSubtitles()
-            : false}
-        on:mouseleave={() =>
-          $settings.selectable_primary_cue_enabled
-            ? onMouseLeftSubtitles()
-            : false}
-        class="extension--cues-window"
-      >
-        {#if currentPrimaryCueText}
-          <div
-            class="extension--cue-line extension--primary-cue {indexedAltCues.length
-              ? ''
-              : 'no-highlight'}"
-          >
-            {@html currentPrimaryCueText.replaceAll("\n", "<br/>")}
-          </div>
-        {/if}
-        {#if currentPrimaryCueIndex != null && indexedAltCues[currentPrimaryCueIndex]}
-          <div class="extension--cue-line extension--alternative-cue">
-            {@html indexedAltCues[currentPrimaryCueIndex]}
-          </div>
-        {/if}
-      </div>
+      {#if currentPrimaryCueText}
+        <div
+          class="extension--cue-line extension--primary-cue {indexedAltCues.length
+            ? ''
+            : 'no-highlight'}"
+        >
+          {@html currentPrimaryCueText.replaceAll("\n", "<br/>")}
+        </div>
+      {/if}
+      {#if currentPrimaryCueIndex != null && indexedAltCues[currentPrimaryCueIndex]}
+        <div class="extension--cue-line extension--alternative-cue">
+          {@html indexedAltCues[currentPrimaryCueIndex]}
+        </div>
+      {/if}
     </div>
-  {/if}
+  </div>
 {/if}
 
 <style>
   :global(
       .kinopoisk-dualsubs--enabled
-        [class*="Subtitles_root"]
-        [class*="Subtitles_text"]
-    ),
-  :global(
-      .kinopoisk-dualsubs--enabled
-        [class*="Subtitles_root"]
-        [class*="Subtitles_new-text"]
+        [data-tid="SubtitlesPortalRoot"]
+        [data-tid="Subtitles"]
     ) {
     @apply opacity-0;
-  }
-
-  :global(
-      .kinopoisk-dualsubs--enabled
-        [class*="PlayerSkin_layout"]
-        [class*="Layout_bottom"]
-    ),
-  :global(
-      .kinopoisk-dualsubs--enabled
-        [class*="PlayerSkin_layout"]
-        [class*="ContextMenu_root"]
-    ) {
-    @apply z-2;
   }
 
   :global(.extension--cues) {

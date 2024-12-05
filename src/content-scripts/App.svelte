@@ -163,6 +163,10 @@
         pl = document.querySelector(`[class*="PlayerManager_player"]`);
       }
 
+      if (!pl) {
+        pl = document.querySelector(`[data-tid="ContentPlayerBody"]`);
+      }
+
       if (videoPlayerElement !== pl) {
         videoPlayerElement = pl;
         if (videoPlayerElement) {
