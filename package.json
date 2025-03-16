@@ -1,6 +1,6 @@
 {
     "name": "kinopoisk-dualsubs",
-    "version": "1.13.1",
+    "version": "1.13.2",
     "scripts": {
         "dev": "vite",
         "build": "vite build",

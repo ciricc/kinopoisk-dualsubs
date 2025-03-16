@@ -167,7 +167,11 @@
         pl = document.querySelector(`[data-tid="ContentPlayerBody"]`);
       }
 
-      if (videoPlayerElement !== pl) {
+      if (
+        videoPlayerElement !== pl ||
+        appContainer.parentElement !== videoPlayerElement.parentElement
+      ) {
+        console.log("Set new video player element");
         videoPlayerElement = pl;
         if (videoPlayerElement) {
           setVisibleFullScreenController(true);
@@ -184,7 +188,12 @@
   const CtrlKey = !isMac() ? "Ctrl" : "⌘";
 
   $: {
-    console.log("Video player element", videoPlayerElement);
+    console.log(
+      "Video player element, app container",
+      videoPlayerElement,
+      $settings,
+      appContainer,
+    );
   }
 
   window["is_dualsubsUser"] = true;

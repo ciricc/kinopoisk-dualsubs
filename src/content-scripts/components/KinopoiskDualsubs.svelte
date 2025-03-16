@@ -207,15 +207,21 @@
       if (!indexedAltCues.length && parsedAltSrtCues.length)
         prepareAltCuesList();
       const activeCue = track.activeCues[0] as VTTCue;
+
       currentPrimaryCueText = activeCue.text;
       const primaryCueIndex = Array.from(track.cues).indexOf(activeCue);
+
       if (primaryCueIndex !== -1) {
         currentPrimaryCueIndex = primaryCueIndex;
         return;
       }
+
       currentPrimaryCueIndex = null;
       return;
+    } else {
+      console.warn("There is no active cues", track);
     }
+
     currentPrimaryCueIndex = null;
     currentPrimaryCueText = "";
   };
@@ -248,11 +254,17 @@
         el.language == watchParams.subtitleLanguage && el.mode != "disabled",
     );
 
-    if (!textTrack) {
+    if (!textTrack || !textTrack.cues.length) {
       textTrack = textTracks.find((el) => el.cues && el.cues.length);
     }
 
-    console.log("Found text track", textTrack, textTracks);
+    console.log(
+      "Found text track",
+      textTrack,
+      textTracks,
+      "count cues",
+      textTrack?.cues?.length,
+    );
     return textTrack || null;
   };
 
@@ -285,16 +297,21 @@
   };
 
   const clearSubtitles = () => {
+    console.log("Clearing subtitles");
+
     currentPrimaryCueText = "";
     currentPrimaryCueIndex = null;
     indexedAltCues = [];
   };
 
   const prepareAltCuesList = () => {
+    console.log("Preparing alt cues list");
+
     indexedAltCues = [];
 
     if (!parsedAltSrtCues.length) {
       console.error("There is no parsed cues");
+
       return;
     }
 
@@ -303,12 +320,27 @@
 
     const videoTextTrack = findActiveVideoTextTrack(video);
 
-    console.log("Video text track cues", videoTextTrack.cues);
-    if (!videoTextTrack || !videoTextTrack.cues) return;
+    console.log(
+      "Video text track cues",
+      videoTextTrack.cues,
+      "count",
+      videoTextTrack.cues.length,
+    );
+
+    if (!videoTextTrack || !videoTextTrack.cues) {
+      console.log("There is no video text track");
+
+      return;
+    }
 
     let cues = Array.from(videoTextTrack.cues);
 
-    console.log("Filling alt cues", parsedAltSrtCues);
+    console.log(
+      "Filling alt cues",
+      parsedAltSrtCues,
+      "cues from video",
+      cues.length,
+    );
 
     // Creating for each video text track cue alternative
     // cues from parsed cues list
@@ -446,10 +478,16 @@
 
   onMount(() => {
     checkSubtitlesPortalElementInterval = setInterval(() => {
-      if (!subtitlesPortalElement)
-        subtitlesPortalElement = document.querySelector(
-          `[data-tid="SubtitlesPortalRoot"]`,
-        );
+      let newSubtitlesPortalElem: HTMLElement = document.querySelector(
+        `[data-tid="SubtitlesPortalRoot"]`,
+      );
+
+      if (
+        !subtitlesPortalElement ||
+        subtitlesPortalElement !== newSubtitlesPortalElem
+      ) {
+        subtitlesPortalElement = newSubtitlesPortalElem;
+      }
     }, 100);
   });
 
@@ -642,8 +680,14 @@
 
   $: console.log("Parsed active cues", parsedAltSrtCues);
   $: console.log("Current alt cues", indexedAltCues);
-  $: console.log("Current cue index", currentPrimaryCueIndex);
+  $: console.log(
+    "Current cue index",
+    currentPrimaryCueIndex,
+    "alt cue",
+    indexedAltCues[currentPrimaryCueIndex],
+  );
   $: console.log("Current watch params", watchParams);
+  $: console.log("Current primary cue text", currentPrimaryCueText);
 </script>
 
 <svelte:body on:click={handleDomChangeLanguage} />
@@ -665,7 +709,6 @@
       : ''}
       "
   >
-    <!-- style="transform: translateY(-{originalCuesPositionBottom}px) scale({subtitlesSizeRatio});" -->
     <div
       on:mousemove={() =>
         $settings.selectable_primary_cue_enabled
