@@ -401,12 +401,36 @@
         let activeCue = activeCues[0];
         let activeCuesIndex = cues.indexOf(activeCue);
         if (activeCuesIndex != -1) {
-          let newReplicaIndex = activeCuesIndex + i;
-          if (newReplicaIndex >= cues.length) {
-            newReplicaIndex = cues.length;
-          } else if (newReplicaIndex < 0) {
-            newReplicaIndex = 0;
+          let newReplicaIndex: number = 0;
+          if (i < 0) {
+            // Find the cue before the current video time
+            // But if the time delta too short, then go to the previous cue
+            let currentTime = video.currentTime;
+            for (let i = 0; i < cues.length; i++) {
+              let cue = cues[i];
+
+              if (cue.startTime < currentTime) {
+                newReplicaIndex = i;
+              } else {
+                break;
+              }
+            }
+
+            let newCue = cues[newReplicaIndex];
+            let cueLength = newCue.endTime - newCue.startTime;
+            let timeDelta = currentTime - newCue.startTime;
+            if (timeDelta < cueLength / 3 && newReplicaIndex > 0) {
+              newReplicaIndex = newReplicaIndex - 1;
+            }
+          } else {
+            newReplicaIndex = activeCuesIndex + i;
+            if (newReplicaIndex >= cues.length) {
+              newReplicaIndex = cues.length;
+            } else if (newReplicaIndex < 0) {
+              newReplicaIndex = 0;
+            }
           }
+
           video.currentTime = cues[newReplicaIndex].startTime;
           return;
         }
