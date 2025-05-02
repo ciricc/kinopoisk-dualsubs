@@ -6,7 +6,7 @@
         "build": "vite build",
         "serve": "vite preview",
         "lint": "eslint .",
-        "pack": "zip -r kinopoisk-dualsubs-$(echo $npm_package_version).zip dist/*"
+        "pack": "cd dist; zip -r ../kinopoisk-dualsubs-$(echo $npm_package_version).zip ."
     },
     "type": "module",
     "devDependencies": {
